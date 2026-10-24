@@ -28,10 +28,9 @@ The engine automatically analyzes the host machine and the target project before
 
 ## 1. Quick Start
 
-Android APK Builder provides three primary interfaces:
-1. `build.bat`: The primary 1-click interactive batch launcher. Double-click or run from terminal to launch the interactive build wizard, or drag-and-drop an Android project folder directly onto it.
-2. `setup-windows.bat`: A Windows batch launcher that automatically handles execution policies and forwards arguments to PowerShell (or launches interactive mode when run without arguments).
-3. `setup-windows.ps1`: The native PowerShell automation engine providing full control over all build parameters.
+Android APK Builder provides two primary interfaces:
+1. `build.bat`: The universal 1-click Windows batch launcher. Double-click to launch the interactive build wizard, drag-and-drop an Android project folder directly onto it, or pass CLI arguments without worrying about PowerShell execution policies.
+2. `setup-windows.ps1`: The native PowerShell automation engine providing full control over all build parameters.
 
 ### 1-Click Interactive Build Wizard (`build.bat`)
 
@@ -55,14 +54,14 @@ Open Command Prompt or PowerShell, navigate to the target Android project root, 
 
 ```cmd
 cd C:\path\to\your-android-project
-C:\path\to\android-apk-builder\setup-windows.bat -BuildType Release
+C:\path\to\android-apk-builder\build.bat -BuildType Release
 ```
 
 #### Specify the Project Directory Explicitly
 You can invoke the builder from anywhere by passing `-ProjectDir`:
 
 ```cmd
-C:\path\to\android-apk-builder\setup-windows.bat -ProjectDir "C:\path\to\your-android-project" -BuildType Release
+C:\path\to\android-apk-builder\build.bat -ProjectDir "C:\path\to\your-android-project" -BuildType Release
 ```
 
 #### Build Debug, Release, or Both
@@ -70,13 +69,13 @@ Select the exact variant to assemble:
 
 ```cmd
 rem Build debug APK
-setup-windows.bat -ProjectDir "C:\path\to\project" -BuildType Debug
+build.bat -ProjectDir "C:\path\to\project" -BuildType Debug
 
 rem Build release APK
-setup-windows.bat -ProjectDir "C:\path\to\project" -BuildType Release
+build.bat -ProjectDir "C:\path\to\project" -BuildType Release
 
 rem Build both debug and release variants in a single run
-setup-windows.bat -ProjectDir "C:\path\to\project" -BuildType Both
+build.bat -ProjectDir "C:\path\to\project" -BuildType Both
 ```
 
 #### Select Artifact Type (APK, AAB, or Both)
@@ -84,17 +83,17 @@ Choose whether to produce installable APK packages, Google Play App Bundles (AAB
 
 ```cmd
 rem Build Google Play App Bundle (.aab)
-setup-windows.bat -ProjectDir "C:\path\to\project" -ArtifactType AAB
+build.bat -ProjectDir "C:\path\to\project" -ArtifactType AAB
 
 rem Build both APK and AAB packages
-setup-windows.bat -ProjectDir "C:\path\to\project" -ArtifactType Both
+build.bat -ProjectDir "C:\path\to\project" -ArtifactType Both
 ```
 
 #### Target Specific Multi-Module Projects
 If the repository contains multiple application modules or features, target the desired module:
 
 ```cmd
-setup-windows.bat -ProjectDir "C:\path\to\project" -Module ":app" -BuildType Release
+build.bat -ProjectDir "C:\path\to\project" -Module ":app" -BuildType Release
 ```
 
 #### Memory Tuning Controls
@@ -102,17 +101,17 @@ Force specific hardware execution profiles:
 
 ```cmd
 rem Force low-memory profile for budget systems (<= 4 GB / 8 GB RAM)
-setup-windows.bat -ProjectDir "C:\path\to\project" -ForceLowMem
+build.bat -ProjectDir "C:\path\to\project" -ForceLowMem
 
 rem Force high-performance profile for powerful multi-core workstations
-setup-windows.bat -ProjectDir "C:\path\to\project" -HighMem
+build.bat -ProjectDir "C:\path\to\project" -HighMem
 ```
 
 #### Headless Automation and CI/CD Switches
 Automate licensing, pre-clean workspaces, or run offline:
 
 ```cmd
-setup-windows.bat -ProjectDir "C:\path\to\project" -AcceptLicenses -CleanFirst -OutputDir "C:\builds"
+build.bat -ProjectDir "C:\path\to\project" -AcceptLicenses -CleanFirst -OutputDir "C:\builds"
 ```
 
 ### Complete Parameter Reference
@@ -471,7 +470,7 @@ Get-ChildItem -Path ".\app\build\outputs" -Include "*.apk","*.aab" -Recurse -Err
 
 ### 1. "Running scripts is disabled on this system"
 - Cause: PowerShell execution policy is set to `Restricted` by default on Windows clients.
-- Remedy: Use `setup-windows.bat`, which invokes PowerShell with `-ExecutionPolicy Bypass` automatically, or adjust the execution policy for your active session:
+- Remedy: Use `build.bat`, which invokes PowerShell with `-ExecutionPolicy Bypass` automatically, or adjust the execution policy for your active session:
   ```powershell
   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
   ```
@@ -480,7 +479,7 @@ Get-ChildItem -Path ".\app\build\outputs" -Include "*.apk","*.aab" -Recurse -Err
 - Cause: Unconstrained JVM processes exceed available physical memory, forcing Windows into aggressive disk paging.
 - Remedy: Apply the low-memory profile to cap heap usage and disable background daemons:
   ```cmd
-  setup-windows.bat -BuildType Release -ForceLowMem
+  build.bat -BuildType Release -ForceLowMem
   ```
 
 ### 3. `SDK location not found` or Invalid SDK Directory
@@ -491,7 +490,7 @@ Get-ChildItem -Path ".\app\build\outputs" -Include "*.apk","*.aab" -Recurse -Err
 - Cause: The target application module defines a release build type without specifying release signing credentials or fallback signing configurations.
 - Remedy: Assemble a debug variant instead, which uses the standard auto-generated Android debug certificate:
   ```cmd
-  setup-windows.bat -BuildType Debug
+  build.bat -BuildType Debug
   ```
   Alternatively, configure signing credentials in your module's `build.gradle` or `build.gradle.kts`:
   ```kotlin
@@ -516,14 +515,14 @@ Get-ChildItem -Path ".\app\build\outputs" -Include "*.apk","*.aab" -Recurse -Err
 - Cause: The required Android platform SDK version is missing from the local SDK installation.
 - Remedy: Run the engine without `-SkipSdkInstall` and include `-AcceptLicenses`. You can also override the target SDK version directly from the command line:
   ```cmd
-  setup-windows.bat -CompileSdkOverride 34 -AcceptLicenses
+  build.bat -CompileSdkOverride 34 -AcceptLicenses
   ```
 
 ### 6. `Unsupported class file major version` (JDK / AGP Mismatch)
 - Cause: The active Java Development Kit version is incompatible with the Gradle or Android Gradle Plugin version configured in the project.
 - Remedy: Android APK Builder evaluates compatibility automatically. To point to an explicit JDK installation, use the `-JdkPath` parameter:
   ```cmd
-  setup-windows.bat -JdkPath "C:\Program Files\Eclipse Adoptium\jdk-17.0.10.7-hotspot"
+  build.bat -JdkPath "C:\Program Files\Eclipse Adoptium\jdk-17.0.10.7-hotspot"
   ```
 
 ### 7. Gradle Wrapper Missing or Corrupted Wrapper Archive
@@ -534,5 +533,5 @@ Get-ChildItem -Path ".\app\build\outputs" -Include "*.apk","*.aab" -Recurse -Err
 - Cause: SDK components cannot be downloaded until official Google license terms are accepted.
 - Remedy: Pass the `-AcceptLicenses` parameter to allow the engine to automatically confirm license agreements:
   ```cmd
-  setup-windows.bat -AcceptLicenses
+  build.bat -AcceptLicenses
   ```

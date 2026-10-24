@@ -2165,7 +2165,7 @@ try {
         if ($BuildType -eq "Release" -and -not $selectedAppModule.HasReleaseSigning -and -not $signingInfo) {
             Write-WarningMsg "DIAGNOSTIC: This project does not appear to have release signing configured."
             Write-WarningMsg "Many open-source projects fail assembleRelease unless signing credentials are provided."
-            Write-WarningMsg "Remedy: Try building with: setup-windows.bat -BuildType Debug"
+            Write-WarningMsg "Remedy: Try building with: build.bat -BuildType Debug"
         }
         Exit-WithCode $buildResult.ExitCode
     }
