@@ -1,0 +1,40 @@
+---
+import { icon } from './icons';
+
+const path = Astro.url.pathname;
+
+function isActive(href: string): boolean {
+  if (href === '/') return path === '/';
+  return path === href || path.startsWith(`${href}/`);
+}
+
+const pageItems = [
+  { href: '/', icon: 'home' as const, label: 'Home' },
+  { href: '/how-to-use', icon: 'book' as const, label: 'How to Use' },
+  { href: '/troubleshooting', icon: 'wrench' as const, label: 'Troubleshooting' },
+];
+---
+<nav class="floatnav" aria-label="Site navigation" transition:persist="floatnav">
+  <span class="floatnav-pill" aria-hidden="true" data-nav-pill></span>
+  {pageItems.map((item) => (
+    <a
+      href={item.href}
+      aria-label={item.label}
+      title={item.label}
+      data-nav-item
+      data-astro-prefetch="hover"
+      aria-current={isActive(item.href) ? 'page' : undefined}
+      set:html={icon(item.icon)}
+    />
+  ))}
+</nav>
+
+<dialog id="sheet" class="sheet" data-sheet transition:persist="dialog-sheet">
+  <div class="sheet-frame">
+    <div class="sheet-head">
+      <h2 id="sheet-heading">Details</h2>
+      <button type="button" data-sclose aria-label="Close" set:html={icon('close')} />
+    </div>
+    <div id="sheet-body"></div>
+  </div>
+</dialog>

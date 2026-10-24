@@ -1,0 +1,13 @@
+# @generated - dependencies
+node_modules/
+
+# @generated - build output (Astro)
+dist/
+.astro/
+
+# @generated - Vercel local state (contains project link + auth, never commit)
+.vercel/
+
+# OS artifacts
+.DS_Store
+Thumbs.db

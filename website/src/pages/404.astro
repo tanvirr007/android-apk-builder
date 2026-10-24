@@ -1,0 +1,130 @@
+---
+import BaseLayout from '../layouts/Base.astro';
+import { icon } from '../components/icons';
+
+const title = 'Page not found';
+const description = 'The requested page is unavailable';
+---
+<BaseLayout title={title} description={description}>
+  <div class="page-head">
+    <h1>Page not found</h1>
+    <p class="lead">
+      The requested page is unavailable
+    </p>
+  </div>
+
+  <section class="contact-panel">
+    <h2>Get in touch</h2>
+    <p class="contact-desc">
+      Questions or feedback?
+    </p>
+
+    <div class="contact-grid">
+      <a href="https://tanvir.info" target="_blank" rel="noopener noreferrer" class="contact-card">
+        <span class="contact-icon" set:html={icon('globe')} />
+        <div class="contact-info">
+          <span class="contact-title">Website</span>
+          <span class="contact-sub">tanvir.info</span>
+        </div>
+      </a>
+
+      <a href="https://t.me/tanvirr007" target="_blank" rel="noopener noreferrer" class="contact-card">
+        <span class="contact-icon" set:html={icon('telegram')} />
+        <div class="contact-info">
+          <span class="contact-title">Telegram</span>
+          <span class="contact-sub">@tanvirr007</span>
+        </div>
+      </a>
+
+      <a href="https://github.com/tanvirr007" target="_blank" rel="noopener noreferrer" class="contact-card">
+        <span class="contact-icon" set:html={icon('github')} />
+        <div class="contact-info">
+          <span class="contact-title">GitHub</span>
+          <span class="contact-sub">@tanvirr007</span>
+        </div>
+      </a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .contact-panel {
+    margin-block-start: var(--sp-12);
+    padding: var(--sp-6);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-surface);
+    max-width: var(--measure);
+    transition: background-color var(--t-fast) ease, border-color var(--t-fast) ease;
+  }
+
+  .contact-panel h2 {
+    font-size: var(--fs-lead);
+    margin-block: 0 var(--sp-2);
+  }
+
+  .contact-desc {
+    color: var(--muted);
+    font-size: var(--fs-body);
+    margin-block-end: var(--sp-4);
+  }
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--sp-3);
+  }
+
+  .contact-card {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--inset);
+    border: 1px solid var(--line);
+    border-radius: var(--r-control);
+    text-decoration: none;
+    color: var(--ink);
+    transition: border-color var(--t-fast) ease, background-color var(--t-fast) ease, transform var(--t-fast) ease;
+  }
+
+  .contact-card:hover {
+    border-color: var(--accent);
+    color: var(--ink);
+    transform: translateY(-1px);
+  }
+
+  .contact-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .contact-icon :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+
+  .contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .contact-title {
+    font-weight: 600;
+    font-size: var(--fs-body);
+    line-height: 1.2;
+  }
+
+  .contact-sub {
+    font-size: var(--fs-caption);
+    color: var(--muted);
+  }
+
+  .contact-card:hover .contact-sub {
+    color: var(--accent);
+  }
+</style>

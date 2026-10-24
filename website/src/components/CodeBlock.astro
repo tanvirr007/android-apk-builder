@@ -1,0 +1,24 @@
+---
+import { icon } from './icons';
+import { randomBytes } from 'node:crypto';
+
+interface Props {
+  code: string;
+  caption?: string;
+}
+
+const { code, caption } = Astro.props;
+const id = 'code-' + randomBytes(4).toString('hex');
+const label = `Copy${caption ? ' ' + caption.toLowerCase() : ''}`;
+---
+<div class="cmd">
+  <div class="cmd-head">
+    {caption ? <span class="cmd-caption">{caption}</span> : <span class="cmd-caption"></span>}
+    <button class="copy" type="button" data-copy-target={`#${id}`} aria-label={label} title="Copy to clipboard">
+      <span class="state-copy" set:html={icon('copy')} />
+      <span class="state-check" set:html={icon('check')} />
+      <span class="copy-word">Copy</span>
+    </button>
+  </div>
+  <pre id={id} tabindex="0"><code>{code}</code></pre>
+</div>

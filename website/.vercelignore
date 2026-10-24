@@ -1,0 +1,15 @@
+# Vercel deployment scope.
+# The build runs with Root Directory = website/ (set in Vercel project settings).
+# These paths are never uploaded for the deploy build.
+
+# Docs folder holds internal design prompts, worklogs and QA notes. Not for production.
+docs/
+
+# Local state
+node_modules/
+.astro/
+.vercel/
+dist/
+
+# Repo-only metadata
+# package-lock.json is deliberately NOT ignored: deterministic CI builds need it.

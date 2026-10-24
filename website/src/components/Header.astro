@@ -1,0 +1,37 @@
+---
+import { icon } from './icons';
+
+interface Props {
+  wide?: boolean;
+}
+
+const { wide = false } = Astro.props;
+---
+<header class="site-header" transition:persist="site-header">
+  <div class="layout site-header-inner" data-wide={wide || undefined}>
+    <a href="/" class="brand" aria-label="Android APK Builder home">
+      <span class="brand-name">Android APK Builder</span>
+    </a>
+    <div class="header-actions">
+      <a
+        href="https://github.com/tanvirr007/android-apk-builder"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="header-btn"
+        aria-label="GitHub repository (opens in a new tab)"
+        title="GitHub repository"
+        set:html={icon('github')}
+      />
+      <button
+        type="button"
+        class="header-btn theme-toggle"
+        data-theme-toggle
+        aria-label="Toggle theme"
+        title="Toggle theme"
+      >
+        <span class="icon-sun" set:html={icon('sun')} />
+        <span class="icon-moon" set:html={icon('moon')} />
+      </button>
+    </div>
+  </div>
+</header>

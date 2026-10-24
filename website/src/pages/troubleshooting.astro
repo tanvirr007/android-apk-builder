@@ -1,0 +1,96 @@
+---
+import BaseLayout from '../layouts/Base.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+import { icon } from '../components/icons';
+
+const title = 'Troubleshooting';
+const description =
+  'Fixes for the eight most common Android APK Builder failures: execution policy, Java heap OOM, SDK location, signing config, missing platform, JDK and AGP mismatch, lost Gradle wrapper, and license prompts.';
+
+const issues: { error: string; cause: string; remedy: string; code?: string; extra?: string }[] = [
+  {
+    error: 'Running scripts is disabled on this system',
+    cause: 'PowerShell ships with its execution policy set to Restricted on Windows clients, so .ps1 files refuse to run.',
+    remedy: 'build.bat already invokes PowerShell with -ExecutionPolicy Bypass, so using it instead of running setup-windows.ps1 directly makes the problem disappear. For direct PowerShell use, relax the policy for that session only:',
+    code: 'Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force',
+  },
+  {
+    error: 'java.lang.OutOfMemoryError: Java heap space',
+    cause: 'Unconstrained JVM processes exceed the physical RAM available, and Windows starts aggressively paging to disk. The page can seem to freeze while Gradle works.',
+    remedy: 'Apply the low-memory profile, which caps the heap and disables background daemons:',
+    code: 'build.bat -BuildType Release -ForceLowMem',
+  },
+  {
+    error: 'SDK location not found',
+    cause: 'Gradle cannot locate the Android SDK, or local.properties contains unescaped Windows backslashes, which .properties syntax treats as escape characters.',
+    remedy: 'The engine writes sdk.dir with forward slashes (sdk.dir=C:/Android) and leaves the rest of the file intact. If you edit local.properties by hand, always use forward slashes or double backslashes (sdk.dir=C:\\\\Android).',
+  },
+  {
+    error: 'Release build failed: signingConfig is not configured',
+    cause: 'The project defines a release build type without signing credentials, and no fallback is present.',
+    remedy: 'Either build the debug variant, which signs with the auto-generated debug certificate:',
+    code: 'build.bat -BuildType Debug',
+    extra: 'Or configure release signing in the module build file; the engine also injects a compatible config automatically when the keystore is known:',
+  },
+  {
+    error: "Failed to find target with hash string 'android-XX'",
+    cause: 'The Android platform package the project targets is not installed in the local SDK.',
+    remedy: 'Let the engine install missing platforms (do not pass -SkipSdkInstall) and accept the licenses. To pin a platform version explicitly:',
+    code: 'build.bat -CompileSdkOverride 34 -AcceptLicenses',
+  },
+  {
+    error: 'Unsupported class file major version',
+    cause: 'The active JDK version does not match what the project AGP and Gradle combination requires, so javac output is rejected by the toolchain or vice versa.',
+    remedy: 'The engine evaluates the compatibility matrix automatically before building. If several JDKs exist on the host and the wrong one is matched, point at the right installation directly:',
+    code: 'build.bat -JdkPath "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.10.7-hotspot"',
+  },
+  {
+    error: 'Gradle wrapper missing or corrupted',
+    cause: 'The repository was cloned without gradle/wrapper/gradle-wrapper.jar, or a zero-byte placeholder got committed.',
+    remedy: 'The engine detects missing or invalid wrapper archives and bootstraps a fresh Gradle distribution that matches the project AGP requirements, then regenerates a clean wrapper environment. No manual action is needed.',
+  },
+  {
+    error: 'Android SDK license agreement not accepted',
+    cause: 'SDK components cannot download until the official Google license terms are accepted, and fresh CI machines never have them pre-accepted.',
+    remedy: 'Pass the acceptance switch and the engine confirms the licenses non-interactively:',
+    code: 'build.bat -AcceptLicenses',
+  },
+];
+---
+<BaseLayout title={title} description={description} wide>
+  <div class="page-head">
+    <h1>Troubleshooting</h1>
+    <p class="lead">
+      The eight most common failures with cause and remedy. Match the error text
+      from your build log, then apply the fix.
+    </p>
+  </div>
+
+  <div class="faq">
+    {issues.map((issue) => (
+      <details data-faq>
+        <summary><span class="faq-caret" set:html={icon('chevron')} />{issue.error}</summary>
+        <div class="faq-body">
+          <span data-label>Cause</span>
+          <p>{issue.cause}</p>
+          <span data-label>Remedy</span>
+          <p>{issue.remedy}</p>
+          {issue.code && <CodeBlock code={issue.code} />}
+          {issue.extra && <p>{issue.extra}</p>}
+          {issue.error.startsWith('Release build failed') && (
+            <CodeBlock
+              caption="Module build.gradle.kts, release signing"
+              code={`android {\n    signingConfigs {\n        create("release") {\n            storeFile = file("my-release-key.jks")\n            storePassword = "password"\n            keyAlias = "my-alias"\n            keyPassword = "password"\n        }\n    }\n    buildTypes {\n        release {\n            signingConfig = signingConfigs.getByName("release")\n        }\n    }\n}`}
+            />
+          )}
+        </div>
+      </details>
+    ))}
+  </div>
+
+  <p>
+    Nothing matched? Run the same build again with <code>-VerboseLog</code>, then
+    <a href="https://github.com/tanvirr007/android-apk-builder/issues/new?template=bug_report.yml">open a bug report</a>
+    with the log attached.
+  </p>
+</BaseLayout>
