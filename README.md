@@ -139,6 +139,12 @@ setup-windows.bat -ProjectDir "C:\path\to\project" -AcceptLicenses -CleanFirst -
 | `-BuildToolsOverride`| String | Auto-detected | Overrides detected `build-tools` version string (e.g., `35.0.0`). |
 | `-VerboseLog` | Switch | Off | Enables verbose diagnostic output during execution. |
 | `-Interactive` | Switch | Off | Launches the interactive step-by-step build wizard. |
+| `-KeystorePath` | String | Auto-generated | Path to an existing custom `.jks` or `.keystore` file. |
+| `-StorePassword` | String | `android` | Keystore password for release signing. |
+| `-KeyAlias` | String | `release` | Key alias name for release signing. |
+| `-KeyPassword` | String | `StorePassword` | Private key password. |
+| `-KeyDName` | String | Auto-generated | Certificate Distinguished Name (e.g. `CN=Dev,O=Org,C=US`). |
+| `-SkipSigning` | Switch | Off | Bypasses automated release keystore generation and APK signing. |
 
 ---
 
@@ -238,12 +244,14 @@ The automation engine executes a structured, six-stage pipeline to guarantee rel
 - Checks that `gradle-wrapper.jar` is valid and non-empty (protecting against incomplete Git checkouts).
 - If the wrapper is missing or corrupted, the engine downloads the official Gradle binary distribution matched to the project's AGP requirements, runs `gradle wrapper`, and generates a clean wrapper environment.
 
-### Stage 6: Compilation, Artifact Harvesting, and Signature Verification
+### Stage 6: Compilation, Transparent Signing Injection, Artifact Harvesting, and Signature Verification
 - Constructs the target Gradle task list based on the requested `-BuildType` (`assembleDebug`, `assembleRelease`, or both) and `-ArtifactType` (APK, AAB, or both).
 - Scopes tasks to the identified application module (for example, `:app:assembleRelease`).
-- Invokes the Gradle wrapper using the calculated memory and worker flags.
-- If an assembleRelease build fails, it inspects project signing configurations and provides targeted diagnostics if missing signing keys caused the failure.
-- Harvests generated artifacts into the specified output directory (`dist/` by default). Outputs are safely copied rather than moved, keeping Gradle build outputs valid for subsequent incremental builds.
+- Transparent Release Signing Injection: Automatically ensures a project release keystore exists or generates one. Generates and passes a transient Gradle init script (`--init-script`) that intercepts unconfigured release signing configs in `afterEvaluate`, eliminating local build crashes caused by missing CI secrets (`:app:validateSigningRelease FAILED: Keystore file not set for signing config release`).
+- Post-Build Alignment & Signing: If any release APK is produced unsigned, it automatically aligns the archive to 4-byte boundaries using `zipalign` and signs it across v1, v2, and v3 schemes using `apksigner`.
+- Self-Healing Keystore Preservation & Mirroring: Stores the keystore in `android-apk-builder/dist/<project-name>/` and mirrors it alongside the built APKs into the project's own `dist/` directory. Automatically recovers keystores across subsequent builds to preserve signature continuity and prevent Android device install conflicts (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`).
+- CI/CD Deployment Manifest: Writes `signing-credentials.txt` containing passwords, alias, certificate SHA-1 and SHA-256 fingerprints, full Base64-encoded keystore for GitHub Actions secrets, and a ready-to-use CI workflow step.
+- Harvests generated artifacts into the specified output directory (`dist/` by default) and mirrors them to `android-apk-builder/dist/<project-name>/`.
 - Calculates SHA-256 cryptographic hashes for every harvested artifact.
 - Invokes `apksigner` to verify APK signatures, identifying active signature schemes (v1, v2, v3, v4) and certificate details.
 

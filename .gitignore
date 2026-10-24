@@ -3,6 +3,16 @@
 *.tmp
 *.zip
 
+# Build outputs and harvested artifacts
+dist/
+builds/
+
+# Signing keys and credential manifests
+*.jks
+*.keystore
+*signing-credentials*.txt
+*signing-credentials*.json
+
 # OS artifacts
 .DS_Store
 Thumbs.db

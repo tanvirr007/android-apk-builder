@@ -45,6 +45,18 @@
     Enable verbose diagnostic logging.
 .PARAMETER Interactive
     Launch interactive build wizard to choose target project path, build variant, artifact type, and hardware options.
+.PARAMETER KeystorePath
+    Optional path to an existing custom .jks or .keystore file.
+.PARAMETER StorePassword
+    Keystore password. Defaults to "android" if auto-generated.
+.PARAMETER KeyAlias
+    Key alias name. Defaults to "release" if auto-generated.
+.PARAMETER KeyPassword
+    Key password. Defaults to StorePassword if omitted.
+.PARAMETER KeyDName
+    Distinguished Name (DName) for release keystore certificate generation (e.g. "CN=MyName,O=MyOrg,C=US").
+.PARAMETER SkipSigning
+    Bypass automatic release keystore generation and APK signing.
 #>
 
 [CmdletBinding()]
@@ -65,6 +77,13 @@ param(
     [string]$JdkPath = "",
     [int]$CompileSdkOverride = 0,
     [string]$BuildToolsOverride = "",
+
+    [string]$KeystorePath = "",
+    [string]$StorePassword = "",
+    [string]$KeyAlias = "",
+    [string]$KeyPassword = "",
+    [string]$KeyDName = "",
+    [switch]$SkipSigning,
 
     [switch]$ForceLowMem,
     [switch]$HighMem,
@@ -261,7 +280,13 @@ function Invoke-InteractiveBuildWizard {
         [ref]$BuildTypeRef,
         [ref]$ArtifactTypeRef,
         [ref]$CleanFirstRef,
-        [ref]$ForceLowMemRef
+        [ref]$ForceLowMemRef,
+        [ref]$KeystorePathRef,
+        [ref]$StorePasswordRef,
+        [ref]$KeyAliasRef,
+        [ref]$KeyPasswordRef,
+        [ref]$KeyDNameRef,
+        [ref]$SkipSigningRef
     )
 
     Write-Host ""
@@ -330,7 +355,7 @@ function Invoke-InteractiveBuildWizard {
     Write-Host "  ------------------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  Build Mode:" -ForegroundColor Cyan
     Write-Host "    [Enter] Build Release APK (Recommended default)" -ForegroundColor White
-    Write-Host "    [C]     Customize options (Debug, AAB, Clean, Low-RAM)" -ForegroundColor White
+    Write-Host "    [C]     Customize options (Debug, AAB, Clean, Low-RAM, Signing)" -ForegroundColor White
     $modeChoice = Read-Host "  Selection [Enter]"
 
     if ($modeChoice -and $modeChoice.Trim() -match '^(c|customize)$') {
@@ -373,8 +398,96 @@ function Invoke-InteractiveBuildWizard {
         if ($lr -match '^(y|yes)$') {
             $ForceLowMemRef.Value = [switch]$true
         }
+
+        # 5. Release Signing Key Configuration
+        Write-Host ""
+        Write-Host "  Release Signing Key:" -ForegroundColor Cyan
+        Write-Host "    1) Auto-manage / Reuse builder keystore [Default - press Enter]"
+        Write-Host "    2) Custom keystore or custom credentials"
+        Write-Host "    3) Skip signing (Produce unsigned release APK)"
+        $signChoice = Read-Host "  Selection [1]"
+        switch ($signChoice.Trim()) {
+            "2" {
+                Write-Host ""
+                $customKs = Read-Host "  Path to existing .jks/.keystore file (leave blank to generate new with custom credentials)"
+                $customKs = $customKs.Trim().Trim('"', "'")
+                if (-not [string]::IsNullOrWhiteSpace($customKs)) {
+                    $KeystorePathRef.Value = $customKs
+                }
+                $customAlias = Read-Host "  Key Alias [Default: release - press Enter]"
+                if (-not [string]::IsNullOrWhiteSpace($customAlias)) {
+                    $KeyAliasRef.Value = $customAlias.Trim()
+                }
+                while ($true) {
+                    $customPass = Read-Host "  Keystore Password (min 6 characters) [Default: android - press Enter]"
+                    if ([string]::IsNullOrWhiteSpace($customPass)) {
+                        break
+                    }
+                    if ($customPass.Trim().Length -lt 6) {
+                        Write-Host "  [!] Password must be at least 6 characters long for Java keystores.`n" -ForegroundColor Red
+                        continue
+                    }
+                    $StorePasswordRef.Value = $customPass.Trim()
+                    $KeyPasswordRef.Value = $customPass.Trim()
+                    break
+                }
+                while ($true) {
+                    $customKeyPass = Read-Host "  Key Password [Default: same as keystore password - press Enter]"
+                    if ([string]::IsNullOrWhiteSpace($customKeyPass)) {
+                        break
+                    }
+                    if ($customKeyPass.Trim().Length -lt 6) {
+                        Write-Host "  [!] Key password must be at least 6 characters long for Java keystores.`n" -ForegroundColor Red
+                        continue
+                    }
+                    $KeyPasswordRef.Value = $customKeyPass.Trim()
+                    break
+                }
+
+                # If generating a new keystore, offer certificate identity customization (DName)
+                if ([string]::IsNullOrWhiteSpace($customKs)) {
+                    Write-Host ""
+                    Write-Host "  Certificate Details (Developer & Organization Identity):" -ForegroundColor Cyan
+                    Write-Host "    1) Auto-generate standard defaults [Default - press Enter]"
+                    Write-Host "    2) Enter custom certificate details (Name, Org, Country, etc.)"
+                    $certChoice = Read-Host "  Selection [1]"
+                    if ($certChoice.Trim() -eq "2") {
+                        Write-Host ""
+                        $defaultCertName = if ($resolvedPath) { Split-Path $resolvedPath -Leaf } else { "Release" }
+                        $cn = Read-Host "    Developer / App Name (CN) [Default: $defaultCertName]"
+                        $ou = Read-Host "    Organizational Unit (OU) [Default: AndroidAPKBuilder]"
+                        $o  = Read-Host "    Organization / Company (O) [Default: LocalBuild]"
+                        $l  = Read-Host "    City / Locality (L) [Default: Local]"
+                        $st = Read-Host "    State / Province (ST) [Default: Local]"
+                        $c  = Read-Host "    Country Code (2 letters, e.g. US, BD, GB) [Default: US]"
+
+                        $cnVal = if (-not [string]::IsNullOrWhiteSpace($cn)) { $cn.Trim() } else { $defaultCertName }
+                        $ouVal = if (-not [string]::IsNullOrWhiteSpace($ou)) { $ou.Trim() } else { "AndroidAPKBuilder" }
+                        $oVal  = if (-not [string]::IsNullOrWhiteSpace($o))  { $o.Trim() }  else { "LocalBuild" }
+                        $lVal  = if (-not [string]::IsNullOrWhiteSpace($l))  { $l.Trim() }  else { "Local" }
+                        $stVal = if (-not [string]::IsNullOrWhiteSpace($st)) { $st.Trim() } else { "Local" }
+                        $cVal  = if (-not [string]::IsNullOrWhiteSpace($c))  { $c.Trim().ToUpper() } else { "US" }
+
+                        $cnVal = $cnVal -replace ',', ' '
+                        $ouVal = $ouVal -replace ',', ' '
+                        $oVal  = $oVal  -replace ',', ' '
+                        $lVal  = $lVal  -replace ',', ' '
+                        $stVal = $stVal -replace ',', ' '
+                        $cVal  = if ($cVal.Length -gt 2) { $cVal.Substring(0, 2) } else { $cVal }
+
+                        $KeyDNameRef.Value = "CN=$cnVal,OU=$ouVal,O=$oVal,L=$lVal,ST=$stVal,C=$cVal"
+                    }
+                }
+            }
+            "3" {
+                $SkipSigningRef.Value = [switch]$true
+            }
+            default {
+                # Standard auto-managed builder keystore
+            }
+        }
     } else {
-        Write-Host "  Using standard defaults: Release APK." -ForegroundColor DarkCyan
+        Write-Host "  Using standard defaults: Release APK with Auto-Signing." -ForegroundColor DarkCyan
     }
 
     Write-Host ""
@@ -1259,7 +1372,7 @@ function Verify-ApkSignature([string]$ApkPath, [string]$AndroidHome, [string]$Bu
     }
 
     if (Test-Path $apksigner) {
-        $check = Invoke-NativeCommand -Executable $apksigner -ArgumentList @("verify", "--verbose", "`"$ApkPath`"") -CaptureOutput -IgnoreExitCode
+        $check = Invoke-NativeCommand -Executable $apksigner -ArgumentList @("verify", "--verbose", $ApkPath) -CaptureOutput -IgnoreExitCode
         $result.RawOutput = "$($check.StdOut)`n$($check.StdErr)"
         if ($check.ExitCode -eq 0) {
             $result.IsSigned = $true
@@ -1300,6 +1413,446 @@ function Get-FileSha256([string]$FilePath) {
     }
 }
 
+function Get-ProjectSafeName([string]$ProjectDir) {
+    # Prioritize actual project directory name on disk
+    $name = (Split-Path (Resolve-Path $ProjectDir).Path -Leaf)
+
+    # Fallback to settings.gradle rootProject.name if directory name cannot be determined
+    if ([string]::IsNullOrWhiteSpace($name)) {
+        $settingsFiles = @(
+            (Join-Path $ProjectDir "settings.gradle"),
+            (Join-Path $ProjectDir "settings.gradle.kts")
+        )
+        foreach ($sf in $settingsFiles) {
+            if (Test-Path $sf) {
+                $content = Get-Content $sf -Raw -ErrorAction SilentlyContinue
+                if ($content -match 'rootProject\.name\s*=\s*[''"]([^''"]+)[''"]') {
+                    $name = $matches[1].Trim()
+                    break
+                }
+            }
+        }
+    }
+
+    $safe = $name -replace '[^a-zA-Z0-9_\-\.]', '_'
+    $safe = $safe.Trim('._-')
+    if ([string]::IsNullOrWhiteSpace($safe)) {
+        $safe = "android-project"
+    }
+    return $safe
+}
+
+function New-GradleSigningInitScript([string]$KeystorePath, [string]$StorePass, [string]$KeyAlias, [string]$KeyPass) {
+    $tempScript = Join-Path $env:TEMP "builder-signing-$([System.Guid]::NewGuid().ToString('N')).gradle"
+    $escapedPath = $KeystorePath.Replace('\', '/')
+    $escapedStorePass = $StorePass.Replace('\', '\\').Replace('"', '\"')
+    $escapedKeyAlias = $KeyAlias.Replace('\', '\\').Replace('"', '\"')
+    $escapedKeyPass = $KeyPass.Replace('\', '\\').Replace('"', '\"')
+
+    $gradleCode = @"
+allprojects { project ->
+    // 1. Eagerly disable strict ValidateSigningTask which throws when CI secrets are missing locally
+    project.tasks.configureEach { task ->
+        if (task.name.toLowerCase().contains("validatesigning")) {
+            task.enabled = false
+        }
+    }
+
+    // 2. Intercept and configure signing configurations
+    project.afterEvaluate { proj ->
+        if (proj.plugins.hasPlugin("com.android.application") || proj.plugins.hasPlugin("android")) {
+            def androidExt = proj.extensions.findByName("android")
+            if (androidExt != null) {
+                def ksFile = new File("${escapedPath}")
+                if (ksFile.exists()) {
+                    // Populate existing 'release' signingConfig if missing or unresolvable
+                    def relConfig = androidExt.signingConfigs.findByName("release")
+                    if (relConfig != null) {
+                        if (relConfig.storeFile == null || !relConfig.storeFile.exists()) {
+                            relConfig.storeFile = ksFile
+                            relConfig.storePassword = "${escapedStorePass}"
+                            relConfig.keyAlias = "${escapedKeyAlias}"
+                            relConfig.keyPassword = "${escapedKeyPass}"
+                        }
+                    }
+
+                    // Populate any other signingConfigs lacking a valid storeFile
+                    androidExt.signingConfigs.all { sc ->
+                        if (sc.storeFile == null || !sc.storeFile.exists()) {
+                            sc.storeFile = ksFile
+                            sc.storePassword = "${escapedStorePass}"
+                            sc.keyAlias = "${escapedKeyAlias}"
+                            sc.keyPassword = "${escapedKeyPass}"
+                        }
+                    }
+
+                    // Create dedicated fallback signingConfig
+                    def fallbackSign = androidExt.signingConfigs.maybeCreate("builderReleaseSign")
+                    fallbackSign.storeFile = ksFile
+                    fallbackSign.storePassword = "${escapedStorePass}"
+                    fallbackSign.keyAlias = "${escapedKeyAlias}"
+                    fallbackSign.keyPassword = "${escapedKeyPass}"
+
+                    androidExt.buildTypes.all { bt ->
+                        if (bt.name == "release") {
+                            if (bt.signingConfig == null || bt.signingConfig.storeFile == null || !bt.signingConfig.storeFile.exists()) {
+                                bt.signingConfig = (relConfig != null && relConfig.storeFile != null && relConfig.storeFile.exists()) ? relConfig : fallbackSign
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Ensure any late-registered ValidateSigningTask is also disabled
+            proj.tasks.configureEach { task ->
+                if (task.name.toLowerCase().contains("validatesigning")) {
+                    task.enabled = false
+                }
+            }
+        }
+    }
+}
+"@
+
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($tempScript, $gradleCode, $utf8NoBom)
+    return $tempScript
+}
+
+function Ensure-ProjectSigningKeystore {
+    param(
+        [string]$ProjectDir,
+        [string]$OutputDir,
+        [string]$JdkPath,
+        [string]$ExplicitKeystore = "",
+        [string]$StorePass = "",
+        [string]$KeyAlias = "",
+        [string]$KeyPass = "",
+        [string]$KeyDName = "",
+        [switch]$SkipSigning
+    )
+
+    if ($SkipSigning.IsPresent) {
+        return $null
+    }
+
+    $safeName = Get-ProjectSafeName $ProjectDir
+    $builderRoot = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
+    $builderDistDir = Join-Path $builderRoot "dist\$safeName"
+    $projectDistDir = Join-Path $ProjectDir $OutputDir
+
+    if (-not (Test-Path $builderDistDir)) {
+        New-Item -ItemType Directory -Path $builderDistDir -Force | Out-Null
+    }
+    if (-not (Test-Path $projectDistDir)) {
+        New-Item -ItemType Directory -Path $projectDistDir -Force | Out-Null
+    }
+
+    # If explicit keystore path was passed via CLI
+    if (-not [string]::IsNullOrWhiteSpace($ExplicitKeystore) -and (Test-Path $ExplicitKeystore)) {
+        $resolvedKs = (Resolve-Path $ExplicitKeystore).Path
+        $effectiveAlias = if ($KeyAlias) { $KeyAlias } else { "release" }
+        $effectiveStorePass = if ($StorePass) { $StorePass } else { "android" }
+        $effectiveKeyPass = if ($KeyPass) { $KeyPass } else { $effectiveStorePass }
+
+        $builderKsDest = Join-Path $builderDistDir "$safeName-release.jks"
+        if (-not (Test-Path $builderKsDest)) {
+            Copy-Item -Path $resolvedKs -Destination $builderKsDest -Force -ErrorAction SilentlyContinue
+        }
+
+        return @{
+            KeystorePath  = $resolvedKs
+            StorePassword = $effectiveStorePass
+            KeyAlias      = $effectiveAlias
+            KeyPassword   = $effectiveKeyPass
+            IsNewlyCreated= $false
+            SafeName      = $safeName
+            BuilderDist   = $builderDistDir
+            ProjectDist   = $projectDistDir
+        }
+    }
+
+    $expectedKsName = "$safeName-release.jks"
+    $builderKs = Join-Path $builderDistDir $expectedKsName
+    $projectKs = Join-Path $projectDistDir $expectedKsName
+    $builderCreds = Join-Path $builderDistDir "signing-credentials.txt"
+    $projectCreds = Join-Path $projectDistDir "signing-credentials.txt"
+
+    # Check for existing keystore in either location (Self-healing recovery)
+    $foundKs = $null
+    if (Test-Path $builderKs) {
+        $foundKs = $builderKs
+        if (-not (Test-Path $projectKs)) {
+            Copy-Item -Path $builderKs -Destination $projectKs -Force -ErrorAction SilentlyContinue
+        }
+        if ((Test-Path $builderCreds) -and -not (Test-Path $projectCreds)) {
+            Copy-Item -Path $builderCreds -Destination $projectCreds -Force -ErrorAction SilentlyContinue
+        }
+    } elseif (Test-Path $projectKs) {
+        $foundKs = $projectKs
+        Copy-Item -Path $projectKs -Destination $builderKs -Force -ErrorAction SilentlyContinue
+        if ((Test-Path $projectCreds) -and -not (Test-Path $builderCreds)) {
+            Copy-Item -Path $projectCreds -Destination $builderCreds -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    $hasCustomCreds = (-not [string]::IsNullOrWhiteSpace($KeyAlias)) -or 
+                      (-not [string]::IsNullOrWhiteSpace($StorePass)) -or 
+                      (-not [string]::IsNullOrWhiteSpace($KeyDName))
+
+    if ($foundKs -and -not $hasCustomCreds) {
+        $recoveredAlias = "release"
+        $recoveredStorePass = "android"
+        $recoveredKeyPass = $recoveredStorePass
+
+        if (Test-Path $builderCreds) {
+            $credContent = Get-Content $builderCreds -Raw -ErrorAction SilentlyContinue
+            if ($credContent -match 'Key Alias:\s+(.+)') { $recoveredAlias = $matches[1].Trim() }
+            if ($credContent -match 'Store Password:\s+(.+)') { $recoveredStorePass = $matches[1].Trim() }
+            if ($credContent -match 'Key Password:\s+(.+)') { $recoveredKeyPass = $matches[1].Trim() }
+        }
+
+        Write-Success "Reusing existing release signing key: $foundKs"
+        return @{
+            KeystorePath  = $foundKs
+            StorePassword = $recoveredStorePass
+            KeyAlias      = $recoveredAlias
+            KeyPassword   = $recoveredKeyPass
+            IsNewlyCreated= $false
+            SafeName      = $safeName
+            BuilderDist   = $builderDistDir
+            ProjectDist   = $projectDistDir
+        }
+    }
+
+    # Generate new dedicated release keystore
+    Write-Info "Generating new dedicated release signing keystore for '$safeName'..."
+
+    $effectiveAlias = if ($KeyAlias) { $KeyAlias } else { "release" }
+    $effectiveStorePass = if ($StorePass) { $StorePass } else { "android" }
+    $effectiveKeyPass = if ($KeyPass) { $KeyPass } else { $effectiveStorePass }
+    $effectiveDName = if (-not [string]::IsNullOrWhiteSpace($KeyDName)) {
+        $KeyDName
+    } else {
+        "CN=$safeName,OU=AndroidAPKBuilder,O=LocalBuild,L=Local,ST=Local,C=US"
+    }
+
+    # Locate keytool
+    $keytoolExe = Join-Path $JdkPath "bin\keytool.exe"
+    if (-not (Test-Path $keytoolExe)) {
+        $keytoolCmd = Get-Command keytool.exe -ErrorAction SilentlyContinue
+        if ($keytoolCmd) {
+            $keytoolExe = $keytoolCmd.Source
+        }
+    }
+
+    if (-not (Test-Path $keytoolExe)) {
+        Write-WarningMsg "Java keytool.exe could not be located. Automatic signing will be skipped."
+        return $null
+    }
+
+    $genArgs = @(
+        "-genkeypair",
+        "-v",
+        "-keystore", $builderKs,
+        "-alias", $effectiveAlias,
+        "-keyalg", "RSA",
+        "-keysize", "2048",
+        "-validity", "10000",
+        "-storepass", $effectiveStorePass,
+        "-keypass", $effectiveKeyPass,
+        "-dname", $effectiveDName,
+        "-storetype", "PKCS12"
+    )
+
+    if ($effectiveStorePass.Length -lt 6 -or $effectiveKeyPass.Length -lt 6) {
+        Write-FailureMsg "Failed to generate keystore: Password must be at least 6 characters long for Java keystores."
+        return $null
+    }
+
+    $genResult = Invoke-NativeCommand -Executable $keytoolExe -ArgumentList $genArgs -CaptureOutput -IgnoreExitCode
+    if ($genResult.ExitCode -ne 0 -or -not (Test-Path $builderKs)) {
+        $keytoolErr = if (-not [string]::IsNullOrWhiteSpace($genResult.StdErr)) {
+            $genResult.StdErr.Trim()
+        } elseif (-not [string]::IsNullOrWhiteSpace($genResult.StdOut)) {
+            $genResult.StdOut.Trim()
+        } else {
+            "Unknown keytool failure"
+        }
+        Write-FailureMsg "Failed to generate keystore: $keytoolErr"
+        return $null
+    }
+
+    Copy-Item -Path $builderKs -Destination $projectKs -Force
+
+    $base64String = [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($builderKs))
+
+    # Obtain certificate fingerprints
+    $listResult = Invoke-NativeCommand -Executable $keytoolExe -ArgumentList @("-list", "-v", "-keystore", $builderKs, "-storepass", $effectiveStorePass, "-alias", $effectiveAlias) -CaptureOutput -IgnoreExitCode
+    $sha1 = "N/A"
+    $sha256 = "N/A"
+    if ($listResult.StdOut -match 'SHA1:\s+([A-Fa-f0-9:]+)') { $sha1 = $matches[1].Trim() }
+    if ($listResult.StdOut -match 'SHA256:\s+([A-Fa-f0-9:]+)') { $sha256 = $matches[1].Trim() }
+
+    $now = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $manifestContent = @"
+================================================================================
+Android APK Builder - Release Signing Credentials & Deployment Manifest
+Project: $safeName
+Created: $now
+================================================================================
+
+KEYSTORE DETAILS:
+  Keystore File:    $expectedKsName
+  Keystore Format:  PKCS12 (Modern Android & Java Standard)
+  Key Alias:        $effectiveAlias
+  Store Password:   $effectiveStorePass
+  Key Password:     $effectiveKeyPass
+  Certificate DName:$effectiveDName
+  Validity:         10,000 days (~27 years)
+
+CERTIFICATE FINGERPRINTS:
+  SHA-1:   $sha1
+  SHA-256: $sha256
+
+--------------------------------------------------------------------------------
+GOOGLE PLAY STORE / APP DISTRIBUTION:
+  - This keystore can be used directly as your Google Play Upload Key.
+  - APKs and AABs signed with this key can be safely updated on user devices
+    without encountering INSTALL_FAILED_UPDATE_INCOMPATIBLE errors.
+  - Note: If an older version of this app was previously installed with a
+    different key, uninstall the previous version from your device first.
+
+--------------------------------------------------------------------------------
+GITHUB ACTIONS CI / SECRETS CONFIGURATION:
+  To build and sign with this exact key in GitHub Actions, add these
+  Repository Secrets (Settings -> Secrets and variables -> Actions):
+
+  1. KEYSTORE_BASE64:
+     (Copy the full base64 string block below)
+
+  2. KEYSTORE_PASSWORD:
+     $effectiveStorePass
+
+  3. KEY_ALIAS:
+     $effectiveAlias
+
+  4. KEY_PASSWORD:
+     $effectiveKeyPass
+
+  GITHUB ACTIONS RESTORATION STEP:
+  --------------------------------------------------
+  - name: Restore Release Keystore
+    run: |
+      echo "`$`{{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/$expectedKsName
+  --------------------------------------------------
+
+FULL BASE64 ENCODED KEYSTORE (Copy everything between delimiters):
+-----BEGIN KEYSTORE BASE64-----
+$base64String
+-----END KEYSTORE BASE64-----
+================================================================================
+"@
+
+    Set-Content -Path $builderCreds -Value $manifestContent -Encoding UTF8
+    Set-Content -Path $projectCreds -Value $manifestContent -Encoding UTF8
+
+    Write-Success "Created release keystore: $builderKs"
+    Write-Success "Saved credentials & GitHub Secrets manifest to: $builderCreds"
+
+    return @{
+        KeystorePath  = $builderKs
+        StorePassword = $effectiveStorePass
+        KeyAlias      = $effectiveAlias
+        KeyPassword   = $effectiveKeyPass
+        IsNewlyCreated= $true
+        SafeName      = $safeName
+        BuilderDist   = $builderDistDir
+        ProjectDist   = $projectDistDir
+    }
+}
+
+function Sign-ApkWithBuilderKey {
+    param(
+        [string]$ApkPath,
+        [string]$KeystorePath,
+        [string]$StorePass,
+        [string]$KeyAlias,
+        [string]$KeyPass,
+        [string]$AndroidHome,
+        [string]$BuildToolsVersion
+    )
+
+    if (-not (Test-Path $ApkPath) -or -not (Test-Path $KeystorePath)) {
+        return $ApkPath
+    }
+
+    $apksigner = Join-Path $AndroidHome "build-tools\$BuildToolsVersion\apksigner.bat"
+    $zipalign = Join-Path $AndroidHome "build-tools\$BuildToolsVersion\zipalign.exe"
+
+    if (-not (Test-Path $apksigner)) {
+        $found = Get-ChildItem -Path (Join-Path $AndroidHome "build-tools") -Filter "apksigner.bat" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($found) { $apksigner = $found.FullName }
+    }
+    if (-not (Test-Path $zipalign)) {
+        $foundZ = Get-ChildItem -Path (Join-Path $AndroidHome "build-tools") -Filter "zipalign.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($foundZ) { $zipalign = $foundZ.FullName }
+    }
+
+    if (-not (Test-Path $apksigner)) {
+        Write-WarningMsg "apksigner.bat not found in Android build-tools. Skipping post-build signing."
+        return $ApkPath
+    }
+
+    Write-Info "Signing APK with project release key: $(Split-Path $ApkPath -Leaf)"
+
+    # Check and run zipalign if available
+    if (Test-Path $zipalign) {
+        $tempAligned = Join-Path $env:TEMP "aligned-$([System.Guid]::NewGuid().ToString('N')).apk"
+        $alignCheck = Invoke-NativeCommand -Executable $zipalign -ArgumentList @("-c", "-v", "4", $ApkPath) -CaptureOutput -IgnoreExitCode
+        if ($alignCheck.ExitCode -ne 0) {
+            Write-Dim "Zip-aligning APK (4-byte boundary)..."
+            $alignExec = Invoke-NativeCommand -Executable $zipalign -ArgumentList @("-p", "-f", "4", $ApkPath, $tempAligned) -CaptureOutput -IgnoreExitCode
+            if ($alignExec.ExitCode -eq 0 -and (Test-Path $tempAligned)) {
+                Copy-Item -Path $tempAligned -Destination $ApkPath -Force
+                Remove-Item -Path $tempAligned -Force -ErrorAction SilentlyContinue
+            }
+        }
+    }
+
+    # Run apksigner
+    $signArgs = @(
+        "sign",
+        "--ks", $KeystorePath,
+        "--ks-pass", "pass:$StorePass",
+        "--ks-key-alias", $KeyAlias,
+        "--key-pass", "pass:$KeyPass",
+        "--v1-signing-enabled", "true",
+        "--v2-signing-enabled", "true",
+        "--v3-signing-enabled", "true",
+        "--v4-signing-enabled", "false",
+        $ApkPath
+    )
+
+    $signResult = Invoke-NativeCommand -Executable $apksigner -ArgumentList $signArgs -CaptureOutput -IgnoreExitCode
+    if ($signResult.ExitCode -ne 0) {
+        Write-WarningMsg "apksigner exited with code $($signResult.ExitCode): $($signResult.StdErr)"
+        return $ApkPath
+    }
+
+    $finalApkPath = $ApkPath
+    if ($ApkPath -match '-unsigned\.apk$') {
+        $renamed = $ApkPath -replace '-unsigned\.apk$', '.apk'
+        if (-not (Test-Path $renamed)) {
+            Move-Item -Path $ApkPath -Destination $renamed -Force
+            $finalApkPath = $renamed
+        }
+    }
+
+    Write-Success "Successfully signed: $(Split-Path $finalApkPath -Leaf)"
+    return $finalApkPath
+}
+
 # ==============================================================================
 # MAIN EXECUTION ORCHESTRATION PIPELINE
 # ==============================================================================
@@ -1315,7 +1868,13 @@ try {
             -BuildTypeRef ([ref]$BuildType) `
             -ArtifactTypeRef ([ref]$ArtifactType) `
             -CleanFirstRef ([ref]$CleanFirst) `
-            -ForceLowMemRef ([ref]$ForceLowMem)
+            -ForceLowMemRef ([ref]$ForceLowMem) `
+            -KeystorePathRef ([ref]$KeystorePath) `
+            -StorePasswordRef ([ref]$StorePassword) `
+            -KeyAliasRef ([ref]$KeyAlias) `
+            -KeyPasswordRef ([ref]$KeyPassword) `
+            -KeyDNameRef ([ref]$KeyDName) `
+            -SkipSigningRef ([ref]$SkipSigning)
     } else {
         if ([string]::IsNullOrWhiteSpace($targetRoot)) {
             $targetRoot = $currentDir
@@ -1502,6 +2061,34 @@ if ($DryRun.IsPresent) {
     Exit-WithCode 0
 }
 
+# Setup Release Signing Keystore & Init Script
+$signingInfo = $null
+$gradleInitScript = $null
+
+if (($BuildType -eq "Release" -or $BuildType -eq "Both") -and -not $SkipSigning.IsPresent) {
+    Write-Info "Preparing release signing keystore and credentials..."
+    $signingInfo = Ensure-ProjectSigningKeystore `
+        -ProjectDir $targetRoot `
+        -OutputDir $OutputDir `
+        -JdkPath $selectedJdk.Path `
+        -ExplicitKeystore $KeystorePath `
+        -StorePass $StorePassword `
+        -KeyAlias $KeyAlias `
+        -KeyPass $KeyPassword `
+        -KeyDName $KeyDName `
+        -SkipSigning:$SkipSigning
+
+    if ($signingInfo -and (Test-Path $signingInfo.KeystorePath)) {
+        $gradleInitScript = New-GradleSigningInitScript `
+            -KeystorePath $signingInfo.KeystorePath `
+            -StorePass $signingInfo.StorePassword `
+            -KeyAlias $signingInfo.KeyAlias `
+            -KeyPass $signingInfo.KeyPassword
+        
+        Write-Success "Configured transparent Gradle release signing injection."
+    }
+}
+
 # Assemble Gradle tasks
 $tasksToRun = @()
 if ($CleanFirst.IsPresent) {
@@ -1538,25 +2125,59 @@ switch ($BuildType) {
 }
 
 $gradleArgs = @() + $tasksToRun + $memProfile.ExtraArgs
+if ($gradleInitScript -and (Test-Path $gradleInitScript)) {
+    $gradleArgs += @("--init-script", $gradleInitScript)
+}
 if ($Offline.IsPresent) {
     $gradleArgs += "--offline"
+}
+
+# Inject common CI environment variable aliases so System.getenv() calls resolve correctly
+$envAliasesToRestore = @{}
+if ($signingInfo) {
+    Write-Info "Injecting local signing secrets into process environment for build tasks..."
+    $pathVars = @("KEYSTORE_PATH", "KEYSTORE_FILE", "KEY_STORE_PATH", "RELEASE_KEYSTORE_PATH", "SIGNING_KEYSTORE_PATH", "RELEASE_STORE_FILE")
+    $storePassVars = @("KEYSTORE_PASSWORD", "KEY_STORE_PASSWORD", "STORE_PASSWORD", "RELEASE_KEYSTORE_PASSWORD", "RELEASE_STORE_PASSWORD")
+    $aliasVars = @("KEY_ALIAS", "KEYSTORE_ALIAS", "RELEASE_KEY_ALIAS", "SIGNING_KEY_ALIAS", "RELEASE_KEY_NAME")
+    $keyPassVars = @("KEY_PASSWORD", "KEYSTORE_KEY_PASSWORD", "RELEASE_KEY_PASSWORD")
+
+    $allVars = $pathVars + $storePassVars + $aliasVars + $keyPassVars
+    foreach ($var in $allVars) {
+        $envAliasesToRestore[$var] = [System.Environment]::GetEnvironmentVariable($var, "Process")
+    }
+
+    foreach ($v in $pathVars) { [System.Environment]::SetEnvironmentVariable($v, $signingInfo.KeystorePath, "Process") }
+    foreach ($v in $storePassVars) { [System.Environment]::SetEnvironmentVariable($v, $signingInfo.StorePassword, "Process") }
+    foreach ($v in $aliasVars) { [System.Environment]::SetEnvironmentVariable($v, $signingInfo.KeyAlias, "Process") }
+    foreach ($v in $keyPassVars) { [System.Environment]::SetEnvironmentVariable($v, $signingInfo.KeyPassword, "Process") }
 }
 
 Write-Info "Executing Gradle build command: .\gradlew.bat $($gradleArgs -join ' ')"
 $buildStartTime = Get-Date
 
-# Execute build
-$buildResult = Invoke-NativeCommand -Executable $gradlewBat -ArgumentList $gradleArgs -WorkingDirectory $targetRoot -IgnoreExitCode
+try {
+    # Execute build
+    $buildResult = Invoke-NativeCommand -Executable $gradlewBat -ArgumentList $gradleArgs -WorkingDirectory $targetRoot -IgnoreExitCode
 
-if (-not $buildResult.Success) {
-    Write-Host ""
-    Write-FailureMsg "Gradle build failed with exit code $($buildResult.ExitCode)."
-    if ($BuildType -eq "Release" -and -not $selectedAppModule.HasReleaseSigning) {
-        Write-WarningMsg "DIAGNOSTIC: This project does not appear to have release signing configured."
-        Write-WarningMsg "Many open-source projects fail assembleRelease unless signing credentials are provided."
-        Write-WarningMsg "Remedy: Try building with: setup-windows.bat -BuildType Debug"
+    if (-not $buildResult.Success) {
+        Write-Host ""
+        Write-FailureMsg "Gradle build failed with exit code $($buildResult.ExitCode)."
+        if ($BuildType -eq "Release" -and -not $selectedAppModule.HasReleaseSigning -and -not $signingInfo) {
+            Write-WarningMsg "DIAGNOSTIC: This project does not appear to have release signing configured."
+            Write-WarningMsg "Many open-source projects fail assembleRelease unless signing credentials are provided."
+            Write-WarningMsg "Remedy: Try building with: setup-windows.bat -BuildType Debug"
+        }
+        Exit-WithCode $buildResult.ExitCode
     }
-    Exit-WithCode $buildResult.ExitCode
+} finally {
+    if ($gradleInitScript -and (Test-Path $gradleInitScript)) {
+        Remove-Item -Path $gradleInitScript -Force -ErrorAction SilentlyContinue
+    }
+    if ($envAliasesToRestore.Count -gt 0) {
+        foreach ($k in $envAliasesToRestore.Keys) {
+            [System.Environment]::SetEnvironmentVariable($k, $envAliasesToRestore[$k], "Process")
+        }
+    }
 }
 
 Write-Success "Gradle task execution completed successfully."
@@ -1595,6 +2216,8 @@ Write-Host "  BUILD SUCCESSFUL - HARVESTED ARTIFACTS                         " -
 Write-Host "==================================================================" -ForegroundColor Green
 
 $copiedCount = 0
+$harvestedFiles = @()
+
 foreach ($art in $rawArtifacts) {
     $destFile = Join-Path $outputBaseDir $art.Name
     # Prevent collision across modules/flavors
@@ -1606,26 +2229,81 @@ foreach ($art in $rawArtifacts) {
     }
 
     Copy-Item -Path $art.FullName -Destination $destFile -Force
-    $sizeMb = [math]::Round((Get-Item $destFile).Length / 1MB, 2)
-    $sha256 = Get-FileSha256 $destFile
 
-    Write-Host "  File:     $destFile" -ForegroundColor Cyan
-    Write-Host "  Size:     $sizeMb MB" -ForegroundColor DarkCyan
-    Write-Host "  SHA-256:  $sha256" -ForegroundColor DarkGray
-
+    # Inspect and apply post-build signing if needed
     if ($destFile.EndsWith(".apk")) {
         $sigInfo = Verify-ApkSignature $destFile $androidSdkRoot $effectiveBuildTools
+        if (-not $sigInfo.IsSigned -and $signingInfo -and -not $SkipSigning.IsPresent) {
+            $destFile = Sign-ApkWithBuilderKey `
+                -ApkPath $destFile `
+                -KeystorePath $signingInfo.KeystorePath `
+                -StorePass $signingInfo.StorePassword `
+                -KeyAlias $signingInfo.KeyAlias `
+                -KeyPass $signingInfo.KeyPassword `
+                -AndroidHome $androidSdkRoot `
+                -BuildToolsVersion $effectiveBuildTools
+            
+            # Re-verify after signing
+            $sigInfo = Verify-ApkSignature $destFile $androidSdkRoot $effectiveBuildTools
+        }
+
+        $sizeMb = [math]::Round((Get-Item $destFile).Length / 1MB, 2)
+        $sha256 = Get-FileSha256 $destFile
+
+        Write-Host "  File:     $destFile" -ForegroundColor Cyan
+        Write-Host "  Size:     $sizeMb MB" -ForegroundColor DarkCyan
+        Write-Host "  SHA-256:  $sha256" -ForegroundColor DarkGray
         if ($sigInfo.IsSigned) {
             Write-Host "  Signing:  Verified ($($sigInfo.SignerScheme) - $($sigInfo.SignerName))" -ForegroundColor Green
         } else {
             Write-Host "  Signing:  UNSIGNED (Requires signing key before device install)" -ForegroundColor Yellow
         }
+    } else {
+        $sizeMb = [math]::Round((Get-Item $destFile).Length / 1MB, 2)
+        $sha256 = Get-FileSha256 $destFile
+        Write-Host "  File:     $destFile" -ForegroundColor Cyan
+        Write-Host "  Size:     $sizeMb MB" -ForegroundColor DarkCyan
+        Write-Host "  SHA-256:  $sha256" -ForegroundColor DarkGray
     }
+
     Write-Host "------------------------------------------------------------------" -ForegroundColor DarkGray
     $copiedCount++
+    $harvestedFiles += $destFile
+}
+
+# Mirror all harvested artifacts and credentials into android-apk-builder dist folder
+$builderDistDir = $null
+if ($signingInfo) {
+    $builderDistDir = $signingInfo.BuilderDist
+} else {
+    $safeName = Get-ProjectSafeName $targetRoot
+    $builderRoot = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
+    $builderDistDir = Join-Path $builderRoot "dist\$safeName"
+}
+
+if (-not (Test-Path $builderDistDir)) {
+    New-Item -ItemType Directory -Path $builderDistDir -Force | Out-Null
+}
+
+foreach ($hf in $harvestedFiles) {
+    Copy-Item -Path $hf -Destination (Join-Path $builderDistDir (Split-Path $hf -Leaf)) -Force
+}
+
+# Mirror keystore to project outputBaseDir as well if not already there
+if ($signingInfo -and (Test-Path $signingInfo.KeystorePath)) {
+    $ksLeaf = Split-Path $signingInfo.KeystorePath -Leaf
+    $destKs = Join-Path $outputBaseDir $ksLeaf
+    if (-not (Test-Path $destKs)) {
+        Copy-Item -Path $signingInfo.KeystorePath -Destination $destKs -Force -ErrorAction SilentlyContinue
+    }
+    $credSrc = Join-Path (Split-Path $signingInfo.KeystorePath -Parent) "signing-credentials.txt"
+    if (Test-Path $credSrc) {
+        Copy-Item -Path $credSrc -Destination (Join-Path $outputBaseDir "signing-credentials.txt") -Force -ErrorAction SilentlyContinue
+    }
 }
 
 Write-Success "Harvested $copiedCount artifact(s) into: $outputBaseDir"
+Write-Success "Mirrored artifacts & signing archive to: $builderDistDir"
 Write-Host ""
 Exit-WithCode 0
 } catch {

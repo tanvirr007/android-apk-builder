@@ -19,7 +19,10 @@ rem
 rem   3. Forcing low memory (Potato PC profile):
 rem      setup-windows.bat -ProjectDir "C:\path\to\project" -BuildType Release -ForceLowMem
 rem
-rem   4. Interactive Build Wizard:
+rem   4. Custom Release Signing Key:
+rem      setup-windows.bat -ProjectDir "C:\path\to\project" -KeystorePath "C:\keys\my.jks"
+rem
+rem   5. Interactive Build Wizard:
 rem      setup-windows.bat (or use build.bat)
 rem ==============================================================================
 

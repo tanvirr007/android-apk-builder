@@ -21,6 +21,9 @@ rem      build.bat "C:\path\to\your\android-project"
 rem
 rem   4. Advanced CLI usage:
 rem      build.bat -ProjectDir "C:\path\to\project" -BuildType Release -ArtifactType APK
+rem
+rem   5. Custom Release Signing Key:
+rem      build.bat -ProjectDir "C:\path\to\project" -KeystorePath "C:\keys\my-key.jks" -StorePassword "secret"
 rem ==============================================================================
 
 setlocal
