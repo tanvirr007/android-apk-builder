@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Android APK Builder — Universal Automated Android APK Compilation Engine for Windows
+    Android APK Builder - Universal Automated Android APK Compilation Engine for Windows
 .DESCRIPTION
     A self-adapting, non-destructive automation system to inspect, resolve dependencies,
     and compile Android projects (Kotlin/Java with Gradle) directly on Microsoft Windows
@@ -204,7 +204,7 @@ function Invoke-NativeCommand {
         $global:LASTEXITCODE = $exitCode
 
         if ($exitCode -ne 0 -and -not $IgnoreExitCode) {
-            $msg = "Native command failed with exit code $exitCode: $Executable $($startInfo.Arguments)"
+            $msg = "Native command failed with exit code ${exitCode}: $Executable $($startInfo.Arguments)"
             if (-not [string]::IsNullOrEmpty($stderr)) {
                 $msg += "`nStderr: $stderr"
             }
@@ -1151,14 +1151,14 @@ function Get-FileSha256([string]$FilePath) {
 # ==============================================================================
 
 Write-Host "==================================================================" -ForegroundColor Cyan
-Write-Host "  Android APK Builder — Universal Build Automation System        " -ForegroundColor Cyan
-Write-Host "  Engineered for Robustness, Non-Destructive Operation & Portability" -ForegroundColor DarkCyan
+Write-Host "  Android APK Builder - Universal Build Automation System        " -ForegroundColor Cyan
+Write-Host '  Engineered for Robustness, Non-Destructive Operation & Portability' -ForegroundColor DarkCyan
 Write-Host "==================================================================" -ForegroundColor Cyan
 
 # ------------------------------------------------------------------------------
 # STAGE 1: Project Root Inspection & Compatibility Discovery
 # ------------------------------------------------------------------------------
-Write-StageHeader "[Stage 1/6] Inspecting Target Android Project"
+Write-StageHeader '[Stage 1/6] Inspecting Target Android Project'
 
 $targetRoot = if ([string]::IsNullOrWhiteSpace($ProjectDir)) { (Get-Location).Path } else { $ProjectDir }
 $targetRoot = (Resolve-Path $targetRoot).Path
@@ -1216,12 +1216,12 @@ Write-Info "Target build-tools: $effectiveBuildTools"
 # ------------------------------------------------------------------------------
 # STAGE 2: Memory Architecture & Hardware Profiling
 # ------------------------------------------------------------------------------
-Write-StageHeader "[Stage 2/6] Host Memory Profiling & Low-RAM Optimization"
+Write-StageHeader '[Stage 2/6] Host Memory Profiling & Low-RAM Optimization'
 
 $memProfile = Get-HostMemoryProfile -ForceLow:$ForceLowMem -ForceHigh:$HighMem
 Write-Success "Memory Profile: $($memProfile.ProfileName)"
 Write-Dim "Scoped GRADLE_OPTS: $($memProfile.GradleOpts)"
-Write-Dim "Daemon & Worker Flags: $($memProfile.ExtraArgs -join ' ')"
+Write-Dim ('Daemon & Worker Flags: {0}' -f ($memProfile.ExtraArgs -join ' '))
 
 # Apply GRADLE_OPTS strictly to current process session without polluting Windows User Registry
 $env:GRADLE_OPTS = $memProfile.GradleOpts
@@ -1229,13 +1229,13 @@ $env:GRADLE_OPTS = $memProfile.GradleOpts
 # ------------------------------------------------------------------------------
 # STAGE 3: Java Development Kit (JDK) Selection & Validation
 # ------------------------------------------------------------------------------
-Write-StageHeader "[Stage 3/6] Java Development Kit (JDK) Resolution"
+Write-StageHeader '[Stage 3/6] Java Development Kit (JDK) Resolution'
 
 $installedJdks = Find-InstalledJdks $JdkPath
 Write-Info "Discovered $( $installedJdks.Count ) verified JDK installations on host."
 
 foreach ($j in $installedJdks) {
-    Write-Dim "Found JDK $($j.MajorVersion) (64-bit: $($j.Is64Bit)) at: $($j.Path)"
+    Write-Dim ('Found JDK {0} (64-bit: {1}) at: {2}' -f $j.MajorVersion, $j.Is64Bit, $j.Path)
 }
 
 $preferredVersion = if ($selectedAppModule.JavaToolchain -gt 0) { $selectedAppModule.JavaToolchain } elseif ($selectedAppModule.SourceCompatibility -gt 0) { $selectedAppModule.SourceCompatibility } else { 17 }
@@ -1262,18 +1262,18 @@ if (-not $selectedJdk) {
     exit 1
 }
 
-Write-Success "Selected Active JDK: Java $($selectedJdk.MajorVersion) ($($selectedJdk.Path))"
+Write-Success ('Selected Active JDK: Java {0} ({1})' -f $selectedJdk.MajorVersion, $selectedJdk.Path)
 
 # Scope JAVA_HOME and PATH strictly to current PowerShell process
 $env:JAVA_HOME = $selectedJdk.Path
-if ($env:Path -notlike "*$($selectedJdk.Path)\bin*") {
-    $env:Path = "$($selectedJdk.Path)\bin;$env:Path"
+if ($env:Path -notlike ("*" + $selectedJdk.Path + "\bin*")) {
+    $env:Path = $selectedJdk.Path + "\bin;" + $env:Path
 }
 
 # ------------------------------------------------------------------------------
 # STAGE 4: Android SDK, Platform Tools & Licenses
 # ------------------------------------------------------------------------------
-Write-StageHeader "[Stage 4/6] Android SDK, Command-Line Tools & Platform Setup"
+Write-StageHeader '[Stage 4/6] Android SDK, Command-Line Tools & Platform Setup'
 
 $androidSdkRoot = Find-AndroidSdkRoot $SdkPath $targetRoot
 Write-Success "Android SDK Location: $androidSdkRoot"
@@ -1317,7 +1317,7 @@ if (-not $SkipSdkInstall) {
 # ------------------------------------------------------------------------------
 # STAGE 5: Gradle Wrapper Verification & Recovery
 # ------------------------------------------------------------------------------
-Write-StageHeader "[Stage 5/6] Gradle Wrapper Verification"
+Write-StageHeader '[Stage 5/6] Gradle Wrapper Verification'
 
 $gradlewBat = Ensure-ProjectGradleWrapper $targetRoot $compatibility.TargetGradle $selectedJdk.Path
 Write-Success "Verified Gradle executable: $gradlewBat"
@@ -1325,7 +1325,7 @@ Write-Success "Verified Gradle executable: $gradlewBat"
 # ------------------------------------------------------------------------------
 # STAGE 6: Compilation, Artifact Discovery & Verification
 # ------------------------------------------------------------------------------
-Write-StageHeader "[Stage 6/6] Executing Android Compilation & Artifact Harvesting"
+Write-StageHeader '[Stage 6/6] Executing Android Compilation & Artifact Harvesting'
 
 if ($DryRun.IsPresent) {
     Write-Success "Dry-run mode activated. Inspection and tool resolution succeeded."
@@ -1421,7 +1421,7 @@ if (-not $rawArtifacts) {
 
 Write-Host ""
 Write-Host "==================================================================" -ForegroundColor Green
-Write-Host "  BUILD SUCCESSFUL — HARVESTED ARTIFACTS                         " -ForegroundColor Green
+Write-Host "  BUILD SUCCESSFUL - HARVESTED ARTIFACTS                         " -ForegroundColor Green
 Write-Host "==================================================================" -ForegroundColor Green
 
 $copiedCount = 0

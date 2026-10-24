@@ -1,6 +1,6 @@
 @echo off
 rem ==============================================================================
-rem Android APK Builder — Universal 1-Click Windows Batch Launcher
+rem Android APK Builder - Universal 1-Click Windows Batch Launcher
 rem ==============================================================================
 rem Author:  Tanvir Hasan
 rem Website: https://tanvir.info
