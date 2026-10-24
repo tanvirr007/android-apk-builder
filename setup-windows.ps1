@@ -43,6 +43,8 @@
     Inspect and plan without executing the actual Gradle compilation.
 .PARAMETER VerboseLog
     Enable verbose diagnostic logging.
+.PARAMETER Interactive
+    Launch interactive build wizard to choose target project path, build variant, artifact type, and hardware options.
 #>
 
 [CmdletBinding()]
@@ -72,7 +74,8 @@ param(
     [switch]$CleanFirst,
     [switch]$Offline,
     [switch]$DryRun,
-    [switch]$VerboseLog
+    [switch]$VerboseLog,
+    [switch]$Interactive
 )
 
 # Enforce strict parsing while retaining controlled native exit handling
@@ -117,6 +120,19 @@ function Write-FailureMsg([string]$Message) {
 
 function Write-Dim([string]$Message) {
     Write-Host "      $Message" -ForegroundColor DarkGray
+}
+
+function Exit-WithCode([int]$Code) {
+    if ($global:IsInteractiveSession) {
+        Write-Host ""
+        Write-Host "Press Enter to exit..." -ForegroundColor Cyan
+        try {
+            [void][System.Console]::ReadLine()
+        } catch {
+            # In non-interactive host fallback
+        }
+    }
+    exit $Code
 }
 
 function Invoke-NativeCommand {
@@ -225,6 +241,144 @@ function Invoke-NativeCommand {
 # ==============================================================================
 # SECTION 2: Project Root & Configuration Parsers
 # ==============================================================================
+
+function Test-IsAndroidProject([string]$Dir) {
+    if ([string]::IsNullOrWhiteSpace($Dir) -or -not (Test-Path $Dir)) {
+        return $false
+    }
+    if ((Test-Path (Join-Path $Dir "settings.gradle")) -or
+        (Test-Path (Join-Path $Dir "settings.gradle.kts")) -or
+        (Test-Path (Join-Path $Dir "build.gradle")) -or
+        (Test-Path (Join-Path $Dir "build.gradle.kts"))) {
+        return $true
+    }
+    return $false
+}
+
+function Invoke-InteractiveBuildWizard {
+    param(
+        [ref]$TargetRootRef,
+        [ref]$BuildTypeRef,
+        [ref]$ArtifactTypeRef,
+        [ref]$CleanFirstRef,
+        [ref]$ForceLowMemRef
+    )
+
+    Write-Host ""
+    Write-Host "==================================================================" -ForegroundColor Cyan
+    Write-Host "  Android APK Builder - Interactive Build Wizard                 " -ForegroundColor Cyan
+    Write-Host "==================================================================" -ForegroundColor Cyan
+    Write-Host ""
+
+    $currentLoc = (Get-Location).Path
+    $resolvedPath = ""
+
+    # If TargetRoot was already passed (e.g. drag & drop or CLI) and valid, show it
+    if (-not [string]::IsNullOrWhiteSpace($TargetRootRef.Value) -and (Test-Path $TargetRootRef.Value)) {
+        $resolvedPath = (Resolve-Path $TargetRootRef.Value).Path
+        Write-Host "  Target Project: $resolvedPath" -ForegroundColor Green
+    } else {
+        $isCurrentAndroid = Test-IsAndroidProject $currentLoc
+        while ($true) {
+            if ($isCurrentAndroid) {
+                Write-Host "  Detected Android project in current directory:" -ForegroundColor Gray
+                Write-Host "  $currentLoc" -ForegroundColor DarkCyan
+                $inputPath = Read-Host "  Press Enter to build this project, or enter/drag a project path"
+                if ([string]::IsNullOrWhiteSpace($inputPath)) {
+                    $resolvedPath = $currentLoc
+                    break
+                }
+            } else {
+                Write-Host "  Enter target Android project directory (or drag and drop folder here):" -ForegroundColor Yellow
+                $inputPath = Read-Host "  Project Path"
+            }
+
+            # Strip surrounding quotes and whitespace
+            $cleaned = $inputPath.Trim().Trim('"', "'")
+            if ([string]::IsNullOrWhiteSpace($cleaned)) {
+                Write-Host "  [!] Project path cannot be empty. Please enter a valid path.`n" -ForegroundColor Red
+                continue
+            }
+
+            if (-not (Test-Path $cleaned)) {
+                Write-Host "  [!] Directory does not exist: $cleaned`n" -ForegroundColor Red
+                continue
+            }
+
+            $fullPath = (Resolve-Path $cleaned).Path
+            if (-not (Test-IsAndroidProject $fullPath)) {
+                Write-Host "  [WARN] No build.gradle or settings.gradle found in: $fullPath" -ForegroundColor Yellow
+                $confirm = Read-Host "  Are you sure this is an Android project? (y/N)"
+                if ($confirm -match '^(y|yes)$') {
+                    $resolvedPath = $fullPath
+                    break
+                } else {
+                    Write-Host ""
+                    continue
+                }
+            } else {
+                $resolvedPath = $fullPath
+                break
+            }
+        }
+    }
+
+    $TargetRootRef.Value = $resolvedPath
+    Write-Host "  [OK] Selected project root: $resolvedPath`n" -ForegroundColor Green
+
+    # Build Mode: Smart Defaults
+    Write-Host "  ------------------------------------------------------------------" -ForegroundColor DarkGray
+    Write-Host "  Build Mode:" -ForegroundColor Cyan
+    Write-Host "    [Enter] Build Release APK (Recommended default)" -ForegroundColor White
+    Write-Host "    [C]     Customize options (Debug, AAB, Clean, Low-RAM)" -ForegroundColor White
+    $modeChoice = Read-Host "  Selection [Enter]"
+
+    if ($modeChoice -and $modeChoice.Trim() -match '^(c|customize)$') {
+        Write-Host ""
+        # 1. Build Type
+        Write-Host "  Build Type:" -ForegroundColor Cyan
+        Write-Host "    1) Release [Default - press Enter]"
+        Write-Host "    2) Debug"
+        Write-Host "    3) Both (Release & Debug)"
+        $bt = Read-Host "  Selection [1]"
+        switch ($bt.Trim()) {
+            "2" { $BuildTypeRef.Value = "Debug" }
+            "3" { $BuildTypeRef.Value = "Both" }
+            default { $BuildTypeRef.Value = "Release" }
+        }
+
+        # 2. Artifact Format
+        Write-Host ""
+        Write-Host "  Artifact Format:" -ForegroundColor Cyan
+        Write-Host "    1) APK [Default - press Enter]"
+        Write-Host "    2) AAB (Android App Bundle)"
+        Write-Host "    3) Both (APK & AAB)"
+        $af = Read-Host "  Selection [1]"
+        switch ($af.Trim()) {
+            "2" { $ArtifactTypeRef.Value = "AAB" }
+            "3" { $ArtifactTypeRef.Value = "Both" }
+            default { $ArtifactTypeRef.Value = "APK" }
+        }
+
+        # 3. Clean Build
+        Write-Host ""
+        $cl = Read-Host "  Clean project before compilation? [y/N - press Enter for No]"
+        if ($cl -match '^(y|yes)$') {
+            $CleanFirstRef.Value = [switch]$true
+        }
+
+        # 4. Low-RAM profile
+        Write-Host ""
+        $lr = Read-Host "  Enable Low-RAM mode (Potato PC / <= 8GB RAM)? [y/N - press Enter for No]"
+        if ($lr -match '^(y|yes)$') {
+            $ForceLowMemRef.Value = [switch]$true
+        }
+    } else {
+        Write-Host "  Using standard defaults: Release APK." -ForegroundColor DarkCyan
+    }
+
+    Write-Host ""
+}
 
 function Parse-VersionCatalogToml([string]$TomlPath) {
     $result = @{
@@ -1150,22 +1304,38 @@ function Get-FileSha256([string]$FilePath) {
 # MAIN EXECUTION ORCHESTRATION PIPELINE
 # ==============================================================================
 
-Write-Host "==================================================================" -ForegroundColor Cyan
-Write-Host "  Android APK Builder - Universal Build Automation System        " -ForegroundColor Cyan
-Write-Host '  Engineered for Robustness, Non-Destructive Operation & Portability' -ForegroundColor DarkCyan
-Write-Host "==================================================================" -ForegroundColor Cyan
+try {
+    $currentDir = (Get-Location).Path
+    $global:IsInteractiveSession = $Interactive.IsPresent -or ([string]::IsNullOrWhiteSpace($ProjectDir) -and -not (Test-IsAndroidProject $currentDir))
 
-# ------------------------------------------------------------------------------
-# STAGE 1: Project Root Inspection & Compatibility Discovery
-# ------------------------------------------------------------------------------
-Write-StageHeader '[Stage 1/6] Inspecting Target Android Project'
+    $targetRoot = $ProjectDir
+    if ($global:IsInteractiveSession) {
+        Invoke-InteractiveBuildWizard `
+            -TargetRootRef ([ref]$targetRoot) `
+            -BuildTypeRef ([ref]$BuildType) `
+            -ArtifactTypeRef ([ref]$ArtifactType) `
+            -CleanFirstRef ([ref]$CleanFirst) `
+            -ForceLowMemRef ([ref]$ForceLowMem)
+    } else {
+        if ([string]::IsNullOrWhiteSpace($targetRoot)) {
+            $targetRoot = $currentDir
+        }
+    }
 
-$targetRoot = if ([string]::IsNullOrWhiteSpace($ProjectDir)) { (Get-Location).Path } else { $ProjectDir }
-$targetRoot = (Resolve-Path $targetRoot).Path
+    Write-Host "==================================================================" -ForegroundColor Cyan
+    Write-Host "  Android APK Builder - Universal Build Automation System        " -ForegroundColor Cyan
+    Write-Host '  Engineered for Robustness, Non-Destructive Operation & Portability' -ForegroundColor DarkCyan
+    Write-Host "==================================================================" -ForegroundColor Cyan
 
-Write-Info "Project Root: $targetRoot"
+    # ------------------------------------------------------------------------------
+    # STAGE 1: Project Root Inspection & Compatibility Discovery
+    # ------------------------------------------------------------------------------
+    Write-StageHeader '[Stage 1/6] Inspecting Target Android Project'
 
-$projectSpec = Inspect-AndroidProject $targetRoot
+    $targetRoot = (Resolve-Path $targetRoot).Path
+    Write-Info "Project Root: $targetRoot"
+
+    $projectSpec = Inspect-AndroidProject $targetRoot
 
 # Determine Application Module
 $selectedAppModule = $null
@@ -1192,7 +1362,7 @@ if (-not $selectedAppModule) {
 
 if (-not $selectedAppModule) {
     Write-FailureMsg "No Android modules could be detected in: $targetRoot"
-    exit 1
+    Exit-WithCode 1
 }
 
 Write-Success "Target Application Module: $($selectedAppModule.ModulePath)"
@@ -1259,7 +1429,7 @@ if (-not $selectedJdk -and -not $SkipJdkInstall) {
 if (-not $selectedJdk) {
     Write-FailureMsg "Compatible JDK ($($compatibility.MinJdk)-$($compatibility.MaxJdk)) could not be located or installed."
     Write-Host "  Please install OpenJDK $($compatibility.MinJdk) from: https://adoptium.net/temurin/releases/" -ForegroundColor Yellow
-    exit 1
+    Exit-WithCode 1
 }
 
 Write-Success ('Selected Active JDK: Java {0} ({1})' -f $selectedJdk.MajorVersion, $selectedJdk.Path)
@@ -1329,7 +1499,7 @@ Write-StageHeader '[Stage 6/6] Executing Android Compilation & Artifact Harvesti
 
 if ($DryRun.IsPresent) {
     Write-Success "Dry-run mode activated. Inspection and tool resolution succeeded."
-    exit 0
+    Exit-WithCode 0
 }
 
 # Assemble Gradle tasks
@@ -1386,7 +1556,7 @@ if (-not $buildResult.Success) {
         Write-WarningMsg "Many open-source projects fail assembleRelease unless signing credentials are provided."
         Write-WarningMsg "Remedy: Try building with: setup-windows.bat -BuildType Debug"
     }
-    exit $buildResult.ExitCode
+    Exit-WithCode $buildResult.ExitCode
 }
 
 Write-Success "Gradle task execution completed successfully."
@@ -1416,7 +1586,7 @@ if (-not $rawArtifacts) {
 
 if (-not $rawArtifacts) {
     Write-WarningMsg "No freshly generated APK or AAB artifacts were detected in build outputs."
-    exit 1
+    Exit-WithCode 1
 }
 
 Write-Host ""
@@ -1457,4 +1627,9 @@ foreach ($art in $rawArtifacts) {
 
 Write-Success "Harvested $copiedCount artifact(s) into: $outputBaseDir"
 Write-Host ""
-exit 0
+Exit-WithCode 0
+} catch {
+    Write-Host ""
+    Write-FailureMsg $_.Exception.Message
+    Exit-WithCode 1
+}

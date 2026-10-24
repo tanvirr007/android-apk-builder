@@ -18,6 +18,9 @@ rem      setup-windows.bat -ProjectDir "C:\path\to\project" -BuildType Release
 rem
 rem   3. Forcing low memory (Potato PC profile):
 rem      setup-windows.bat -ProjectDir "C:\path\to\project" -BuildType Release -ForceLowMem
+rem
+rem   4. Interactive Build Wizard:
+rem      setup-windows.bat (or use build.bat)
 rem ==============================================================================
 
 setlocal

@@ -28,9 +28,25 @@ The engine automatically analyzes the host machine and the target project before
 
 ## 1. Quick Start
 
-Android APK Builder provides two primary interfaces:
-1. `setup-windows.bat`: A lightweight Windows batch launcher that automatically handles execution policies and forwards arguments to PowerShell.
-2. `setup-windows.ps1`: The native PowerShell automation engine providing full control over all build parameters.
+Android APK Builder provides three primary interfaces:
+1. `build.bat`: The primary 1-click interactive batch launcher. Double-click or run from terminal to launch the interactive build wizard, or drag-and-drop an Android project folder directly onto it.
+2. `setup-windows.bat`: A Windows batch launcher that automatically handles execution policies and forwards arguments to PowerShell (or launches interactive mode when run without arguments).
+3. `setup-windows.ps1`: The native PowerShell automation engine providing full control over all build parameters.
+
+### 1-Click Interactive Build Wizard (`build.bat`)
+
+For the fastest and simplest experience on Windows:
+1. Double-click `build.bat` or run it from Command Prompt:
+   ```cmd
+   build.bat
+   ```
+2. If executed outside an Android project folder (such as directly inside this builder directory), the wizard prompts you to enter or drag-and-drop the target project directory.
+3. Choose your build mode:
+   - Press **Enter** to immediately build with recommended defaults (`Release` APK).
+   - Type **C** and press **Enter** to customize build parameters (Debug/Release, APK/AAB, clean build, and low-memory mode).
+4. The terminal window pauses upon completion (`Press Enter to exit...`) so you can review harvested artifact paths and signature verification without the window closing automatically.
+
+You can also drag and drop your Android project folder directly onto `build.bat` in Windows Explorer to build it immediately.
 
 ### Basic Invocations
 
@@ -122,6 +138,7 @@ setup-windows.bat -ProjectDir "C:\path\to\project" -AcceptLicenses -CleanFirst -
 | `-CompileSdkOverride`| Integer | Auto-detected | Overrides detected `compileSdk` version (e.g., `35`). |
 | `-BuildToolsOverride`| String | Auto-detected | Overrides detected `build-tools` version string (e.g., `35.0.0`). |
 | `-VerboseLog` | Switch | Off | Enables verbose diagnostic output during execution. |
+| `-Interactive` | Switch | Off | Launches the interactive step-by-step build wizard. |
 
 ---
 
