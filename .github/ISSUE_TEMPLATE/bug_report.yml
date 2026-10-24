@@ -1,0 +1,215 @@
+name: Bug Report
+description: Report a build error, crash, resolution failure, or unexpected behavior in Android APK Builder
+title: "[Bug]: "
+labels: ["bug"]
+assignees:
+  - tanvirr007
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue! Android APK Builder is designed to automate Android builds on Windows headlessly and reliably.
+        To help us diagnose and fix your issue as quickly as possible, please provide all relevant technical details about your host system, target Android project, and the exact error output.
+
+  - type: checkboxes
+    id: preflight_checks
+    attributes:
+      label: Pre-flight Verification
+      description: Please verify these checks before opening a new issue.
+      options:
+        - label: I have searched [existing open and closed issues](https://github.com/tanvirr007/android-apk-builder/issues?q=is%3Aissue) to confirm this problem has not already been reported.
+          required: true
+        - label: I have checked the [Troubleshooting & FAQ](https://github.com/tanvirr007/android-apk-builder#troubleshooting--faq) and [Compatibility Matrices](https://github.com/tanvirr007/android-apk-builder#compatibility-matrices) in the README.
+          required: false
+        - label: I have attempted running the build with the `-VerboseLog` flag to capture diagnostic traces.
+          required: false
+
+  - type: textarea
+    id: bug_summary
+    attributes:
+      label: Bug / Failure Summary
+      description: A clear, concise overview of what went wrong or behaved unexpectedly.
+      placeholder: e.g. Build fails during Stage 3 (Compatibility Resolution) when targeting AGP 8.7.2 with JDK 17...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: failure_stage
+    attributes:
+      label: Pipeline Stage Where Failure Occurred
+      description: In which phase of the Android APK Builder pipeline did the problem happen?
+      options:
+        - "Launcher / Interactive Wizard (build.bat / drag-and-drop / menu)"
+        - "Stage 1: System Hardware & Memory Profiling (RAM detection / JVM heap limits)"
+        - "Stage 2: Project Layout & Configuration Discovery (AGP / compileSdk / module detection)"
+        - "Stage 3: Compatibility Resolution Engine (AGP / Gradle / JDK compatibility matrix)"
+        - "Stage 4: Toolchain Provisioning (JDK / Android SDK / cmdline-tools / build-tools / licenses)"
+        - "Stage 5: Gradle Wrapper Verification & Auto-Repair (gradlew.bat / gradle-wrapper.jar)"
+        - "Stage 6: Compilation Task Invocation (gradlew assemble / bundle)"
+        - "Stage 7: Keystore Generation & Signature Injection (apksigner / zipalign / keytool)"
+        - "Stage 8: Output Harvesting & Artifact Verification (dist/ folder copy)"
+        - "PowerShell Syntax / ExecutionPolicy / Script Crash"
+        - "Other / Not sure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: command_executed
+    attributes:
+      label: Exact Command Executed
+      description: What exact command or launch method did you use? (Include all CLI arguments and flags passed).
+      placeholder: |
+        build.bat -ProjectDir "C:\Projects\MyAndroidApp" -BuildType Release -ArtifactType APK -VerboseLog
+        # OR:
+        powershell -ExecutionPolicy Bypass -File .\setup-windows.ps1 -ProjectDir "C:\Projects\MyAndroidApp" -BuildType Both
+        # OR:
+        Double-clicked build.bat (interactive folder selection / drag-and-drop)
+      render: powershell
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: active_flags
+    attributes:
+      label: Active Flags & Parameters
+      description: Check all options, switches, or modes that were active during this run.
+      options:
+        - label: -BuildType Release (default)
+        - label: -BuildType Debug
+        - label: -BuildType Both
+        - label: -ArtifactType APK (default)
+        - label: -ArtifactType AAB (Google Play Bundle)
+        - label: -ArtifactType Both
+        - label: -ForceLowMem (low-memory profile for budget systems <= 4GB / 8GB RAM)
+        - label: -HighMem (high-performance workstation profile)
+        - label: -CleanFirst (clean Gradle build caches before compiling)
+        - label: -SkipSigning (bypass keystore generation & signing)
+        - label: -DryRun (inspect and plan without invoking Gradle compilation)
+        - label: -VerboseLog (detailed diagnostic logging)
+        - label: -Offline (Gradle offline compilation mode)
+        - label: -AcceptLicenses (auto-accept Android SDK licenses)
+        - label: Custom Keystore flags used (-KeystorePath, -StorePassword, -KeyAlias, etc.)
+        - label: Custom Toolchain overrides used (-JdkPath, -SdkPath, -CompileSdkOverride, etc.)
+
+  - type: textarea
+    id: reproduction_steps
+    attributes:
+      label: Steps to Reproduce
+      description: Step-by-step instructions to reproduce the problem.
+      placeholder: |
+        1. Open Command Prompt or PowerShell in the android-apk-builder directory.
+        2. Run: `build.bat -ProjectDir "C:\Path\To\SampleProject" -BuildType Release`
+        3. Wait for Stage 4 toolchain check.
+        4. Observe the error output.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_vs_actual
+    attributes:
+      label: Expected vs Actual Behavior
+      description: What did you expect to happen, and what actually occurred instead?
+      placeholder: |
+        - Expected: Gradle compiles the project and outputs the signed APK to dist/.
+        - Actual: The script terminates with exit code 1 at Stage 4 saying 'Android SDK build-tools 34.0.0 could not be located'.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: windows_version
+    attributes:
+      label: Windows OS Version & Edition
+      description: Which version of Microsoft Windows are you running on?
+      options:
+        - "Windows 11 (24H2 / 23H2)"
+        - "Windows 11 (22H2 or earlier)"
+        - "Windows 10 (22H2 / 21H2)"
+        - "Windows 10 (Older versions)"
+        - "Windows Server 2022 / 2019"
+        - "Other / Virtual Machine / Cloud Runner"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: powershell_version
+    attributes:
+      label: Host Shell / PowerShell Environment
+      description: What shell environment was used to invoke the builder?
+      options:
+        - "Windows PowerShell 5.1 (Desktop Edition - built into Windows 10/11)"
+        - "PowerShell 7+ (Core / pwsh)"
+        - "Command Prompt (cmd.exe via build.bat)"
+        - "Windows Terminal (PowerShell)"
+        - "Git Bash / MSYS2 / WSL (calling batch or ps1)"
+    validations:
+      required: true
+
+  - type: input
+    id: system_hardware
+    attributes:
+      label: System Hardware & Memory (RAM)
+      description: Total physical RAM and CPU model (essential for JVM heap allocation and OOM triage).
+      placeholder: e.g. 8 GB RAM, Intel Core i5-1135G7 (or 16 GB RAM, AMD Ryzen 7 5800H)
+    validations:
+      required: true
+
+  - type: textarea
+    id: android_project_details
+    attributes:
+      label: Target Android Project Specifications
+      description: Technical specifications of the Android project you are compiling.
+      placeholder: |
+        - Language / Framework: Kotlin / Jetpack Compose (or Java / Flutter / React Native / Unity)
+        - AGP Version (com.android.tools.build:gradle): e.g. 8.4.2
+        - Gradle Version (gradle-wrapper.properties): e.g. 8.6
+        - compileSdk / targetSdk / minSdk: e.g. 34 / 34 / 24
+        - Build Script DSL: Kotlin DSL (build.gradle.kts) OR Groovy (build.gradle)
+        - Module Layout: Single-module (:app) OR Multi-module
+        - Version Catalog: gradle/libs.versions.toml (Yes / No)
+        - Public Repository or Sample Link (if shareable): https://github.com/...
+    validations:
+      required: true
+
+  - type: textarea
+    id: toolchain_environment
+    attributes:
+      label: Pre-existing Host Toolchains (JDK & Android SDK)
+      description: Detail any existing JDKs or Android SDK installations on the machine (if known).
+      placeholder: |
+        - Installed JDK(s): JDK 17 (Eclipse Temurin) at C:\Program Files\Eclipse Adoptium\...
+        - Android Studio installed: Yes / No (If yes, specify version / JBR location)
+        - ANDROID_HOME or ANDROID_SDK_ROOT configured: Yes (C:\Users\<user>\AppData\Local\Android\Sdk) / No
+        - cmdline-tools installed: Yes (latest) / No / Downloaded by script
+    validations:
+      required: false
+
+  - type: textarea
+    id: full_logs_and_stacktrace
+    attributes:
+      label: Console Output & Error Stack Trace
+      description: |
+        Paste the full terminal output and any Gradle/PowerShell stack traces.
+        - Run with `-VerboseLog` if possible to generate detailed diagnostic information.
+        - You can also drag and drop a saved log file (.log, .txt) directly into this box.
+      placeholder: Paste complete terminal log or Gradle --stacktrace here...
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots_and_media
+    attributes:
+      label: Screenshots or Terminal Screen Recordings
+      description: Drag and drop screenshots or screen recordings showing the terminal output, error prompts, or generated files.
+      placeholder: Drag and drop image files (.png, .jpg) or videos (.mp4, .gif) here...
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context & Troubleshooting Attempted
+      description: Any other information, workarounds you tried, or whether this project builds successfully in Android Studio or on another machine.
+      placeholder: e.g. Project builds successfully inside Android Studio, but fails when built headlessly via setup-windows.ps1 with error...
+    validations:
+      required: false

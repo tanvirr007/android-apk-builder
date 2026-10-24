@@ -1,0 +1,128 @@
+name: Feature Request
+description: Suggest an idea, enhancement, or new capability for Android APK Builder
+title: "[Feature]: "
+labels: ["enhancement"]
+assignees:
+  - tanvirr007
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping make Android APK Builder better! We welcome ideas and suggestions from the community.
+        Please provide as much context and detail as possible to help us understand the motivation, design, and impact of your proposed feature.
+
+  - type: checkboxes
+    id: preflight_checks
+    attributes:
+      label: Pre-flight Verification
+      description: Please verify these checks before submitting a new feature request.
+      options:
+        - label: I have searched [existing open and closed feature requests](https://github.com/tanvirr007/android-apk-builder/issues?q=is%3Aissue+label%3Aenhancement) to avoid duplicates.
+          required: true
+        - label: I have confirmed this capability is not already supported in the latest release or documented in [README.md](https://github.com/tanvirr007/android-apk-builder#readme).
+          required: false
+
+  - type: textarea
+    id: feature_summary
+    attributes:
+      label: Feature Title & Summary
+      description: A concise description of the new capability or enhancement you are requesting.
+      placeholder: e.g. Support for automated App Bundle (.aab) extraction into Universal APKs via Bundletool...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: feature_category
+    attributes:
+      label: Primary Feature Area / Subsystem
+      description: Which area or component of Android APK Builder does this feature target?
+      options:
+        - "Toolchain Provisioning (JDK / Android SDK / cmdline-tools / NDK)"
+        - "Hardware Profiling & Dynamic JVM Memory Allocation"
+        - "Compatibility Resolution Engine (New AGP / Gradle / JDK matrix support)"
+        - "Build Variants & Artifact Packaging (Flavors, Split APKs, AAB, Bundletool)"
+        - "Release Keystore & Code Signing (v1/v2/v3/v4 schemes, custom certificates)"
+        - "Project Discovery & Parser Engine (Kotlin DSL, Groovy, Version Catalogs, Multi-module)"
+        - "CLI Flags, Interactive Launcher & Batch UX (build.bat wizard, menu, terminal UI)"
+        - "Artifact Verification, Integrity & Output Packaging (dist/ folder, SHA-256 manifests)"
+        - "CI/CD & Headless Automation Integration (GitHub Actions, GitLab CI, Azure Pipelines)"
+        - "Build Performance, Daemon Optimization & Gradle Caching"
+        - "Other / General Enhancement"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem_statement
+    attributes:
+      label: Problem Statement or Use Case
+      description: What specific problem, limitation, or friction are you experiencing with Android APK Builder?
+      placeholder: Describe the current limitation and why the existing features or workarounds are insufficient...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: Proposed Solution & Desired Behavior
+      description: How do you envision this feature working? Describe the desired workflow and behavior.
+      placeholder: I would like Android APK Builder to automatically...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_cli_interface
+    attributes:
+      label: Proposed CLI Syntax / Parameters (if applicable)
+      description: If this involves new flags or interactive prompts, what should the parameter names and syntax look like?
+      placeholder: |
+        build.bat -ProjectDir "C:\..." -ExtractUniversalApk -BundletoolPath "C:\tools\bundletool.jar"
+        # Or:
+        .\setup-windows.ps1 -TargetFlavor "production" -GenerateUniversalApk
+      render: powershell
+    validations:
+      required: false
+
+  - type: textarea
+    id: target_stack
+    attributes:
+      label: Target Android Stack & Compatibility
+      description: Which Android Gradle Plugin (AGP), Gradle, JDK, or framework versions would benefit from this?
+      placeholder: e.g. AGP 8.4+, Gradle 8.6+, Kotlin 2.0, or cross-platform frameworks (Flutter / React Native)
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives_considered
+    attributes:
+      label: Alternatives or Workarounds Considered
+      description: Have you considered any alternative approaches, or seen how other build tools implement this?
+      placeholder: Describe any alternative solutions or manual scripts you have tried...
+    validations:
+      required: false
+
+  - type: textarea
+    id: implementation_ideas
+    attributes:
+      label: Implementation Ideas or Technical Architecture (Optional)
+      description: Any specific thoughts on how to implement this in `setup-windows.ps1` or `build.bat`?
+      placeholder: e.g. In Section 8 (Artifact Verification), we can check if $ExtractUniversalApk is set and invoke bundletool.jar...
+    validations:
+      required: false
+
+  - type: textarea
+    id: mockups_and_references
+    attributes:
+      label: Mockups, CLI Output Examples, or Documentation References
+      description: Drag and drop mockups or paste reference links (e.g., Android developer docs, Gradle API specs, etc.).
+      placeholder: Paste links, ASCII terminal layout diagrams, or drag & drop images here...
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Any other information, thoughts, or questions you would like to share.
+      placeholder: Any additional context...
+    validations:
+      required: false

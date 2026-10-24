@@ -535,3 +535,11 @@ Get-ChildItem -Path ".\app\build\outputs" -Include "*.apk","*.aab" -Recurse -Err
   ```cmd
   build.bat -AcceptLicenses
   ```
+
+---
+
+## 8. Reporting Issues & Feedback
+
+- [Report a Bug](https://github.com/tanvirr007/android-apk-builder/issues/new?template=bug_report.yml)
+- [Request a Feature](https://github.com/tanvirr007/android-apk-builder/issues/new?template=feature_request.yml)
+- [Browse All Issues](https://github.com/tanvirr007/android-apk-builder/issues)

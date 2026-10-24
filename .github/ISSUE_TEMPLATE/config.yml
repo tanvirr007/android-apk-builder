@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "Android APK Builder Documentation"
+    url: https://github.com/tanvirr007/android-apk-builder#readme
+    about: Read the complete documentation, architecture overview, and usage instructions.
+  - name: "Troubleshooting & Compatibility Guide"
+    url: https://github.com/tanvirr007/android-apk-builder#troubleshooting--faq
+    about: Check AGP, Gradle, and JDK compatibility matrices and known solutions.
