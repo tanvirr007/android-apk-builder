@@ -50,11 +50,11 @@ const proj = 'C:\\your-android-project';
 
   <h3>Artifact types</h3>
   <p>
-    Generate installable APK files, Google Play AAB bundles, or both. Google
-    Play requires AAB bundles for store releases, while APKs install directly on
-    test devices.
+    Generate installable APK files (default), Google Play AAB bundles, or both.
+    Google Play requires AAB bundles for store releases, while APKs install
+    directly on test devices.
   </p>
-  <CodeBlock caption="APK, AAB, or both" code={`${repo}\\build.bat -ArtifactType AAB\n${repo}\\build.bat -ArtifactType Both`} />
+  <CodeBlock caption="APK, AAB, or both" code={`${repo}\\build.bat -ArtifactType APK\n${repo}\\build.bat -ArtifactType AAB\n${repo}\\build.bat -ArtifactType Both`} />
 
   <h3>Multi-module apps</h3>
   <p>For projects with multiple app modules, pass <code>-Module</code> to target a specific module:</p>
@@ -75,24 +75,30 @@ const proj = 'C:\\your-android-project';
   </p>
 
   <h2>Hardware profiles</h2>
-  <dl>
-    <dt><code>-ForceLowMem</code></dt>
-    <dd>
-      Caps JVM heap memory at 1.5 GB, limits execution to a single worker, and
-      disables the Gradle daemon. Recommended for systems with 4 GB to 8 GB of
-      RAM to prevent excessive disk paging.
-    </dd>
-    <dt><code>-HighMem</code></dt>
-    <dd>
-      Allocates a 4 GB heap, enables parallel workers, and turns on the build
-      cache for multi-core workstations.
-    </dd>
-    <dt>Default</dt>
-    <dd>
-      The engine detects physical RAM through WMI and selects a profile
-      automatically. When total system memory is below 8.5 GB, conservative
-      limits apply.
-    </dd>
+  <dl class="profiles-grid">
+    <div class="profile-card">
+      <dt><code>-ForceLowMem</code></dt>
+      <dd>
+        Caps JVM heap memory at 1.5 GB, limits execution to a single worker, and
+        disables the Gradle daemon. Recommended for systems with 4 GB to 8 GB of
+        RAM to prevent excessive disk paging.
+      </dd>
+    </div>
+    <div class="profile-card">
+      <dt><code>-HighMem</code></dt>
+      <dd>
+        Allocates a 4 GB heap, enables parallel workers, and turns on the build
+        cache for multi-core workstations.
+      </dd>
+    </div>
+    <div class="profile-card">
+      <dt>Default</dt>
+      <dd>
+        The engine detects physical RAM through WMI and selects a profile
+        automatically. When total system memory is below 8.5 GB, conservative
+        limits apply.
+      </dd>
+    </div>
   </dl>
   <CodeBlock caption="Force a profile" code={`${repo}\\build.bat -ForceLowMem\n${repo}\\build.bat -HighMem`} />
 

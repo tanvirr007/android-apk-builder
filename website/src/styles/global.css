@@ -62,15 +62,47 @@
   --sp-24: 96px;
 
   /* measure + layout */
-  --measure: 36rem;
-  --code-measure: 42rem;
+  --measure: 40rem;
+  --code-measure: 100%;
   --measure-wide: 56rem;
+  --container-pad: var(--sp-4);
   --nav-clearance: calc(64px + env(safe-area-inset-bottom, 0px) + var(--sp-8));
 
   /* motion */
   --ease: cubic-bezier(0.2, 0, 0, 1);
   --t-fast: 160ms;
   --t-slide: 220ms;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --container-pad: var(--sp-6);
+    --measure-wide: 60rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --container-pad: var(--sp-8);
+    --measure: 46rem;
+    --measure-wide: 72rem;
+  }
+}
+
+@media (min-width: 1366px) {
+  :root {
+    --container-pad: var(--sp-12);
+    --measure: 48rem;
+    --measure-wide: 80rem;
+  }
+}
+
+@media (min-width: 1920px) {
+  :root {
+    --container-pad: clamp(var(--sp-12), 4vw, var(--sp-16));
+    --measure: 50rem;
+    --measure-wide: 88rem;
+  }
 }
 
 [data-theme="dark"] {
@@ -193,11 +225,17 @@ code {
 }
 
 .layout {
-  width: min(100% - 2 * var(--sp-8), var(--measure));
+  width: min(100% - 2 * var(--container-pad), var(--measure));
   margin-inline: auto;
   padding-block: var(--sp-8) var(--nav-clearance);
 }
-.layout[data-wide] { width: min(100% - 2 * var(--sp-8), var(--measure-wide)); }
+.layout[data-wide] { width: min(100% - 2 * var(--container-pad), var(--measure-wide)); }
+.layout[data-wide] p,
+.layout[data-wide] li,
+.layout[data-wide] dd,
+.layout[data-wide] .page-head .lead {
+  max-width: 100%;
+}
 
 .skip {
   position: absolute;
@@ -316,6 +354,24 @@ code {
   border-radius: var(--r-surface);
   max-width: var(--code-measure);
   margin-block: var(--sp-4) var(--sp-6);
+  width: 100%;
+}
+
+.cmd-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-4);
+  margin-block: var(--sp-4) var(--sp-6);
+}
+
+.cmd-grid .cmd {
+  margin-block: 0;
+}
+
+@media (min-width: 768px) {
+  .cmd-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .cmd-head {
@@ -561,11 +617,102 @@ tbody tr:last-child { border-block-end: 0; }
 }
 
 /* ============================================================
+   Feature grid (Home page capabilities)
+   ___________________________________________________________ */
+
+.feature-grid {
+  list-style: none;
+  margin: var(--sp-4) 0 var(--sp-8) 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-3);
+}
+
+.feature-item {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-surface);
+  padding: var(--sp-4);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  transition: border-color var(--t-fast) ease, background-color var(--t-fast) ease;
+}
+
+.feature-item svg {
+  color: var(--accent);
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 3px;
+}
+
+.feature-item p,
+.feature-item span {
+  max-width: none;
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .feature-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--sp-4);
+  }
+}
+
+/* ============================================================
+   Profiles grid (Hardware profiles on How-to-use)
+   ___________________________________________________________ */
+
+.profiles-grid {
+  margin: var(--sp-4) 0 var(--sp-6) 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-4);
+}
+
+.profile-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-surface);
+  padding: var(--sp-4) var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  transition: border-color var(--t-fast) ease, background-color var(--t-fast) ease;
+}
+
+.profile-card dt {
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-body);
+  color: var(--ink);
+  margin: 0;
+}
+
+.profile-card dd {
+  margin: 0;
+  max-width: none;
+  font-size: var(--fs-caption);
+  color: var(--muted);
+  line-height: var(--lh-body);
+}
+
+@media (min-width: 768px) {
+  .profiles-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ============================================================
    Troubleshooting accordion
    ___________________________________________________________ */
 
 .faq {
-  max-width: var(--measure);
+  max-width: var(--measure-wide);
   margin-block-end: var(--sp-8);
 }
 .faq details {
@@ -593,6 +740,7 @@ tbody tr:last-child { border-block-end: 0; }
 .faq .faq-caret svg { width: 16px; height: 16px; }
 .faq details[open] .faq-caret { transform: rotate(90deg); }
 .faq .faq-body { padding-inline-start: var(--sp-6); padding-block-end: var(--sp-4); }
+.faq .faq-body p { max-width: none; }
 .faq faq-label, .faq [data-label] {
   display: block;
   font-size: var(--fs-caption);
@@ -601,6 +749,22 @@ tbody tr:last-child { border-block-end: 0; }
   letter-spacing: var(--tracking-wide);
   color: var(--muted);
   margin-block: var(--sp-3) var(--sp-1);
+}
+
+@media (min-width: 960px) {
+  .faq-body-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-6);
+    align-items: start;
+  }
+  .faq-body-grid .faq-col {
+    display: flex;
+    flex-direction: column;
+  }
+  .faq-body-grid .faq-col-full {
+    grid-column: 1 / -1;
+  }
 }
 
 /* ============================================================

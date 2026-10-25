@@ -5,7 +5,7 @@ import { icon } from '../components/icons';
 const title = 'Page not found';
 const description = 'The requested page is unavailable';
 ---
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} wide>
   <div class="page-head">
     <h1>Page not found</h1>
     <p class="lead">
@@ -54,7 +54,7 @@ const description = 'The requested page is unavailable';
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--r-surface);
-    max-width: var(--measure);
+    max-width: var(--measure-wide);
     transition: background-color var(--t-fast) ease, border-color var(--t-fast) ease;
   }
 
@@ -74,6 +74,13 @@ const description = 'The requested page is unavailable';
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--sp-3);
+  }
+
+  @media (min-width: 640px) {
+    .contact-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-4);
+    }
   }
 
   .contact-card {

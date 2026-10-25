@@ -11,7 +11,7 @@ The site serves Windows developers who need to understand what the tool does, ho
 - Use Source Sans 3 for human-readable text. Reserve JetBrains Mono for code blocks, inline commands, file paths, and parameter names.
 - Host fonts locally through `@fontsource` using latin subsets, including weights 400, 600, and 700 for sans, and weight 400 for mono. Specify `font-display: swap`.
 - Body text uses a 16px minimum floor with a line-height of 1.55 for paragraphs.
-- Prose width is capped at 44rem, approximately 66 characters per line. Headings use `text-wrap: balance`.
+- Prose in standard reading columns is capped at 44rem, while in wide layouts paragraphs, lists, and lead text match the responsive container width to align flush with grids and code blocks. Headings use `text-wrap: balance`.
 
 ## Color
 
@@ -21,8 +21,8 @@ The site serves Windows developers who need to understand what the tool does, ho
 
 ## Layout
 
-- Design mobile-first using fluid `clamp()` sizing and layout widths set via CSS custom properties. Main prose columns use a maximum width of 44rem, while reference tables extend up to 56rem.
-- The spacing scale comprises 4px, 8px, 12px, 16px, 24px, 32px, 48px, 64px, and 96px. Related elements sit close together, and major section gaps expand at 48px and 64px.
+- Design mobile-first using fluid `clamp()` sizing and layout widths set via CSS custom properties. Main prose columns use a responsive measure (40rem to 50rem), while wide layouts scale across breakpoints from 56rem on mobile/tablet to 72rem (1152px) on laptops, 80rem (1280px) on desktop monitors, and 88rem (1408px) on ultrawide monitors. Side-by-side commands, 2-column feature grids, 3-column hardware profiles, and split troubleshooting accordions optimize horizontal space without creating unreadable line lengths.
+- The spacing scale comprises 4px, 8px, 12px, 16px, 24px, 32px, 48px, 64px, and 96px. Gutter padding adapts fluidly between 16px on mobile up to clamp(48px, 4vw, 64px) on ultrawide monitors. Related elements sit close together, and major section gaps expand at 48px and 64px.
 - Corner radii are restricted to 0px, 2px, 6px, and 10px. The floating navigation bar is the only pill-shaped element on the site.
 - Avoid cards by default. Structured lists, tables, and section headings organize information. Where inset surfaces are required for code blocks, use solid backgrounds without combining borders and shadows.
 

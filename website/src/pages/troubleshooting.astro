@@ -71,18 +71,26 @@ const issues: { error: string; cause: string; remedy: string; code?: string; ext
       <details data-faq>
         <summary><span class="faq-caret" set:html={icon('chevron')} />{issue.error}</summary>
         <div class="faq-body">
-          <span data-label>Cause</span>
-          <p>{issue.cause}</p>
-          <span data-label>Remedy</span>
-          <p>{issue.remedy}</p>
-          {issue.code && <CodeBlock code={issue.code} />}
-          {issue.extra && <p>{issue.extra}</p>}
-          {issue.error.startsWith('Release build failed') && (
-            <CodeBlock
-              caption="Module build.gradle.kts, release signing"
-              code={`android {\n    signingConfigs {\n        create("release") {\n            storeFile = file("my-release-key.jks")\n            storePassword = "password"\n            keyAlias = "my-alias"\n            keyPassword = "password"\n        }\n    }\n    buildTypes {\n        release {\n            signingConfig = signingConfigs.getByName("release")\n        }\n    }\n}`}
-            />
-          )}
+          <div class="faq-body-grid">
+            <div class="faq-col">
+              <span data-label>Cause</span>
+              <p>{issue.cause}</p>
+            </div>
+            <div class="faq-col">
+              <span data-label>Remedy</span>
+              <p>{issue.remedy}</p>
+              {issue.code && <CodeBlock code={issue.code} />}
+              {issue.extra && <p>{issue.extra}</p>}
+            </div>
+            {issue.error.startsWith('Release build failed') && (
+              <div class="faq-col-full">
+                <CodeBlock
+                  caption="Module build.gradle.kts, release signing"
+                  code={`android {\n    signingConfigs {\n        create("release") {\n            storeFile = file("my-release-key.jks")\n            storePassword = "password"\n            keyAlias = "my-alias"\n            keyPassword = "password"\n        }\n    }\n    buildTypes {\n        release {\n            signingConfig = signingConfigs.getByName("release")\n        }\n    }\n}`}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </details>
     ))}

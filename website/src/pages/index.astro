@@ -1,10 +1,20 @@
 ---
 import BaseLayout from '../layouts/Base.astro';
 import CodeBlock from '../components/CodeBlock.astro';
+import { icon } from '../components/icons';
 
 const title = 'Home';
 const description =
   'Build Android APK and AAB files from Command Prompt or PowerShell on Windows 10 and 11 without Android Studio.';
+
+const features = [
+  'Reads Groovy, Kotlin DSL, and version catalog build files to identify required SDK, build-tools, and AGP versions.',
+  'Resolves JDK, Gradle, and AGP versions against an integrated compatibility matrix.',
+  'Profiles host RAM and applies matching JVM heap limits, garbage collection options, and worker counts to prevent out-of-memory errors on 4 GB systems.',
+  'Installs missing JDKs and SDK packages, and restores damaged Gradle wrappers.',
+  'Signs release builds, generates a keystore when none exists, and verifies outputs with SHA-256 hashes and apksigner v1 through v4 checks.',
+  'Scopes environment variables to the active session and copies build artifacts instead of moving them.',
+];
 ---
 <BaseLayout title={title} description={description} wide>
   <div class="page-head">
@@ -25,36 +35,26 @@ const description =
   </p>
 
   <h2>What the engine does automatically</h2>
-  <ul>
-    <li>
-      Reads Groovy, Kotlin DSL, and version catalog build files to identify
-      required SDK, build-tools, and AGP versions.
-    </li>
-    <li>Resolves JDK, Gradle, and AGP versions against an integrated compatibility matrix.</li>
-    <li>
-      Profiles host RAM and applies matching JVM heap limits, garbage collection
-      options, and worker counts to prevent out-of-memory errors on 4 GB systems.
-    </li>
-    <li>Installs missing JDKs and SDK packages, and restores damaged Gradle wrappers.</li>
-    <li>
-      Signs release builds, generates a keystore when none exists, and verifies
-      outputs with SHA-256 hashes and apksigner v1 through v4 checks.
-    </li>
-    <li>
-      Scopes environment variables to the active session and copies build
-      artifacts instead of moving them.
-    </li>
+  <ul class="feature-grid">
+    {features.map((feat) => (
+      <li class="feature-item">
+        <span set:html={icon('check')} />
+        <span>{feat}</span>
+      </li>
+    ))}
   </ul>
 
   <h2>Try it in two commands</h2>
-  <CodeBlock
-    caption="Clone"
-    code={`git clone https://github.com/tanvirr007/android-apk-builder.git`}
-  />
-  <CodeBlock
-    caption="Open directory"
-    code={`cd android-apk-builder`}
-  />
+  <div class="cmd-grid">
+    <CodeBlock
+      caption="Clone"
+      code={`git clone https://github.com/tanvirr007/android-apk-builder.git`}
+    />
+    <CodeBlock
+      caption="Open directory"
+      code={`cd android-apk-builder`}
+    />
+  </div>
 
   <p>
     Double-click <code>build.bat</code>, or right-click and choose <strong>Run as administrator</strong> if required.
