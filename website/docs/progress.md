@@ -31,6 +31,7 @@ Working log. Update every milestone and preserve history.
 | 2026-10-25 | Prefetching and navigation transition tuning | Hover prefetching and 220ms pill transitions reduce interaction latency |
 | 2026-10-25 | unslop.md editorial rules added to docs directory | Provides standalone anti-AI writing standards for documentation and contributors |
 | 2026-10-25 | Conventional desktop navigation in header with mobile floating dock | Optimizes desktop ergonomics and layout space while preserving mobile touch dock |
+| 2026-10-25 | Removal of cards and tick marks from capability list | Adheres to design-style.md rule to avoid cards and presents a clean 2-column structured list |
 
 ## Sync log
 

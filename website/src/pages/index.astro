@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../layouts/Base.astro';
 import CodeBlock from '../components/CodeBlock.astro';
-import { icon } from '../components/icons';
 
 const title = 'Home';
 const description =
@@ -35,12 +34,9 @@ const features = [
   </p>
 
   <h2>What the engine does automatically</h2>
-  <ul class="feature-grid">
+  <ul class="feature-list">
     {features.map((feat) => (
-      <li class="feature-item">
-        <span set:html={icon('check')} />
-        <span>{feat}</span>
-      </li>
+      <li>{feat}</li>
     ))}
   </ul>
 

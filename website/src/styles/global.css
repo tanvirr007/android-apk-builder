@@ -678,49 +678,44 @@ tbody tr:last-child { border-block-end: 0; }
 }
 
 /* ============================================================
-   Feature grid (Home page capabilities)
+   Feature list (Home page capabilities)
    ___________________________________________________________ */
 
-.feature-grid {
-  list-style: none;
+.feature-list {
   margin: var(--sp-4) 0 var(--sp-8) 0;
   padding: 0;
+  list-style: none;
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--sp-3);
 }
 
-.feature-item {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-surface);
-  padding: var(--sp-4);
+.feature-list li {
+  position: relative;
+  padding-inline-start: var(--sp-6, 24px);
   font-size: var(--fs-body);
   line-height: var(--lh-body);
-  display: flex;
-  align-items: flex-start;
-  gap: var(--sp-3);
-  transition: border-color var(--t-fast) ease, background-color var(--t-fast) ease;
-}
-
-.feature-item svg {
-  color: var(--accent);
-  width: 18px;
-  height: 18px;
-  flex: none;
-  margin-top: 3px;
-}
-
-.feature-item p,
-.feature-item span {
-  max-width: none;
+  color: var(--ink);
   margin: 0;
+  max-width: none;
+}
+
+.feature-list li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
 }
 
 @media (min-width: 768px) {
-  .feature-grid {
+  .feature-list {
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--sp-4);
+    column-gap: var(--sp-8);
+    row-gap: var(--sp-4);
   }
 }
 

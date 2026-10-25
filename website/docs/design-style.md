@@ -21,7 +21,7 @@ The site serves Windows developers who need to understand what the tool does, ho
 
 ## Layout
 
-- Design mobile-first using fluid `clamp()` sizing and layout widths set via CSS custom properties. Main prose columns use a responsive measure (40rem to 50rem), while wide layouts scale across breakpoints from 56rem on mobile/tablet to 72rem (1152px) on laptops, 80rem (1280px) on desktop monitors, and 88rem (1408px) on ultrawide monitors. Side-by-side commands, 2-column feature grids, 3-column hardware profiles, and split troubleshooting accordions optimize horizontal space without creating unreadable line lengths.
+- Design mobile-first using fluid `clamp()` sizing and layout widths set via CSS custom properties. Main prose columns use a responsive measure (40rem to 50rem), while wide layouts scale across breakpoints from 56rem on mobile/tablet to 72rem (1152px) on laptops, 80rem (1280px) on desktop monitors, and 88rem (1408px) on ultrawide monitors. Side-by-side commands, 2-column capability lists, 3-column hardware profiles, and split troubleshooting accordions optimize horizontal space without creating unreadable line lengths.
 - The spacing scale comprises 4px, 8px, 12px, 16px, 24px, 32px, 48px, 64px, and 96px. Gutter padding adapts fluidly between 16px on mobile up to clamp(48px, 4vw, 64px) on ultrawide monitors. Related elements sit close together, and major section gaps expand at 48px and 64px.
 - Corner radii are restricted to 0px, 2px, 6px, and 10px. The floating navigation bar is the only pill-shaped element on the site.
 - Avoid cards by default. Structured lists, tables, and section headings organize information. Where inset surfaces are required for code blocks, use solid backgrounds without combining borders and shadows.
