@@ -28,9 +28,9 @@ The site serves Windows developers who need to understand what the tool does, ho
 
 ## Navigation
 
-- The navigation bar is a bottom-centered floating pill displaying icons with a 40px minimum touch target. Tooltips use `aria-label` and `title` attributes. On screens narrower than 360px, the bar scrolls horizontally without causing page-level overflow.
-- Icons do not include subtitles. The active page displays a solid accent icon and an `aria-current` attribute.
-- Navigation supports full keyboard access, displays an accent focus ring, and provides a skip-to-content link as the first DOM element.
+- On desktop, laptop, and tablet screens (viewport width 768px and above), navigation is conventional and integrated into the site header. Semantic text links ("Home", "How to use", "Troubleshooting") sit beside the brand anchor with accessible hit padding, active accent styling, and subtle hover backgrounds.
+- On mobile screens (viewport width under 768px), navigation displays as a bottom-centered floating pill with touch-friendly icons and a gliding background indicator. On screens narrower than 360px, the floating bar scrolls horizontally without causing page-level overflow.
+- Navigation supports full keyboard access, displays an accent focus ring on `:focus-visible`, synchronizes `aria-current="page"` across client-side page transitions, and provides a skip-to-content link as the first DOM element.
 
 ## Theme
 

@@ -30,6 +30,7 @@ Working log. Update every milestone and preserve history.
 | 2026-10-25 | Header with brand anchor, GitHub link, and theme toggle | Establishes persistent identity and keeps floating navigation dedicated to primary routes |
 | 2026-10-25 | Prefetching and navigation transition tuning | Hover prefetching and 220ms pill transitions reduce interaction latency |
 | 2026-10-25 | unslop.md editorial rules added to docs directory | Provides standalone anti-AI writing standards for documentation and contributors |
+| 2026-10-25 | Conventional desktop navigation in header with mobile floating dock | Optimizes desktop ergonomics and layout space while preserving mobile touch dock |
 
 ## Sync log
 

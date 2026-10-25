@@ -6,12 +6,39 @@ interface Props {
 }
 
 const { wide = false } = Astro.props;
+const path = Astro.url.pathname;
+
+function isActive(href: string): boolean {
+  if (href === '/') return path === '/';
+  return path === href || path.startsWith(`${href}/`);
+}
+
+const navItems = [
+  { href: '/', label: 'Home' },
+  { href: '/how-to-use', label: 'How to use' },
+  { href: '/troubleshooting', label: 'Troubleshooting' },
+];
 ---
 <header class="site-header" transition:persist="site-header">
   <div class="layout site-header-inner" data-wide={wide || undefined}>
     <a href="/" class="brand" aria-label="Android APK Builder home">
       <span class="brand-name">Android APK Builder</span>
     </a>
+
+    <nav class="desktop-nav" aria-label="Main navigation">
+      {navItems.map((item) => (
+        <a
+          href={item.href}
+          class="desktop-nav-link"
+          data-desktop-nav-link
+          data-astro-prefetch="hover"
+          aria-current={isActive(item.href) ? 'page' : undefined}
+        >
+          {item.label}
+        </a>
+      ))}
+    </nav>
+
     <div class="header-actions">
       <a
         href="https://github.com/tanvirr007/android-apk-builder"

@@ -130,7 +130,20 @@
       return;
     }
 
-    // 5. Floating nav click (instant visual gliding)
+    // 5. Desktop nav click (instant visual active state)
+    var desktopNavItem = event.target.closest('[data-desktop-nav-link]');
+    if (desktopNavItem) {
+      var allDesktopItems = document.querySelectorAll('[data-desktop-nav-link]');
+      allDesktopItems.forEach(function (item) {
+        if (item === desktopNavItem) {
+          item.setAttribute('aria-current', 'page');
+        } else {
+          item.removeAttribute('aria-current');
+        }
+      });
+    }
+
+    // 6. Floating nav click (instant visual gliding)
     var navItem = event.target.closest('.floatnav [data-nav-item]');
     if (navItem) {
       var floatnav = navItem.closest('.floatnav');
@@ -203,10 +216,31 @@
     document.documentElement.setAttribute('data-nav-direction', dir);
   });
 
+  /* ---------- desktop navigation active states ---------- */
+  function updateDesktopNav() {
+    var desktopLinks = document.querySelectorAll('[data-desktop-nav-link]');
+    if (!desktopLinks.length) return;
+
+    var currentPath = normalizePath(window.location.pathname);
+    desktopLinks.forEach(function (link) {
+      var href = normalizePath(link.getAttribute('href') || '');
+      var isCurrent = (href === '/' && currentPath === '/') ||
+                      (href !== '/' && (currentPath === href || currentPath.startsWith(href + '/')));
+      if (isCurrent) {
+        link.setAttribute('aria-current', 'page');
+      } else {
+        link.removeAttribute('aria-current');
+      }
+    });
+  }
+
   /* ---------- floating dock indicator ---------- */
   function updateFloatingNav(immediate) {
     var floatnav = document.querySelector('.floatnav');
     if (!floatnav) return;
+    if (floatnav.offsetParent === null && window.getComputedStyle(floatnav).display === 'none') {
+      return;
+    }
 
     var pill = floatnav.querySelector('[data-nav-pill]');
     var links = floatnav.querySelectorAll('[data-nav-item]');
@@ -258,15 +292,18 @@
   /* ---------- lifecycle hooks ---------- */
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
+      updateDesktopNav();
       updateFloatingNav(true);
       initAccordions();
     });
   } else {
+    updateDesktopNav();
     updateFloatingNav(true);
     initAccordions();
   }
 
   document.addEventListener('astro:page-load', function () {
+    updateDesktopNav();
     updateFloatingNav(false);
     initAccordions();
   });
