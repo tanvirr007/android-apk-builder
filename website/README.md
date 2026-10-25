@@ -24,4 +24,4 @@ npx vercel       rem deploy from this directory
 
 - Follow the copy rules in `docs/unslop.md` when writing or editing documentation. Avoid em dashes, parentheses in prose, and marketing superlatives. Commands match the repository README verbatim.
 - Avoid gradients, glassmorphism, glow effects, or decorative card stripes. Review `docs/impeccable.md` before adding visual components.
-- Rely on default Astro bundling. The only custom script is `public/site.js`, which manages copy buttons, dialog sheets, and accordion state.
+- Rely on default Astro bundling. The only custom script is `public/site.js`, which manages copy buttons, theme toggling, navigation states, and accordion exclusivity.

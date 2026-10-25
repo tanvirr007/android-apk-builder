@@ -1,7 +1,7 @@
 /* Site interactions, event-delegated with Astro ClientRouter support.
-   1. copy buttons  2. dialog sheets (CLI flags + theme picker)
-   3. accordion exclusivity (details)  4. directional view transitions
-   5. floating dock indicator animation */
+   1. copy buttons  2. theme toggle  3. desktop nav active state
+   4. floating dock indicator  5. accordion exclusivity (details)
+   6. directional view transitions */
 (function () {
   'use strict';
 
@@ -27,41 +27,6 @@
     try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
     ta.remove();
     return ok;
-  }
-
-  /* ---------- dialog sheets ---------- */
-  function getSheet() {
-    return document.getElementById('sheet');
-  }
-
-  var sheetOpener = null;
-
-  function fillSheet(selector) {
-    var sheet = getSheet();
-    var tpl = document.querySelector(selector);
-    if (!sheet || !tpl || tpl.tagName !== 'TEMPLATE') return;
-    var body = document.getElementById('sheet-body');
-    if (!body) return;
-    body.replaceChildren(tpl.content.cloneNode(true));
-    var heading = body.querySelector('h2');
-    if (heading) {
-      heading.id = 'sheet-heading';
-      sheet.setAttribute('aria-labelledby', 'sheet-heading');
-    }
-  }
-
-  function openSheet(selector, opener) {
-    var sheet = getSheet();
-    if (!sheet) return;
-    sheetOpener = opener;
-    fillSheet(selector);
-    if (sheet.open) return;
-    sheet.showModal();
-  }
-
-  function closeSheet() {
-    var sheet = getSheet();
-    if (sheet && sheet.open) sheet.close();
   }
 
   /* ---------- global delegated click listener ---------- */
@@ -98,39 +63,7 @@
       return;
     }
 
-    // 3. Dialog sheets
-    var opener = event.target.closest('[data-open-sheet]');
-    if (opener) {
-      openSheet(opener.getAttribute('data-open-sheet'), opener);
-      return;
-    }
-    if (event.target.closest('[data-sclose]')) {
-      closeSheet();
-      return;
-    }
-
-    // 4. Backdrop click on sheet
-    var sheet = getSheet();
-    if (sheet && event.target === sheet) {
-      closeSheet();
-      return;
-    }
-
-    var choice = event.target.closest('[data-theme-choice]');
-    if (choice) {
-      var value = choice.getAttribute('data-theme-choice') || 'light';
-      try { localStorage.setItem('theme', value); } catch (e) { /* ignore */ }
-      if (window.__setTheme) window.__setTheme(value);
-      if (sheet) {
-        sheet.querySelectorAll('[data-theme-choice]').forEach(function (b) {
-          b.setAttribute('aria-checked', String(b === choice));
-        });
-      }
-      setTimeout(closeSheet, 320);
-      return;
-    }
-
-    // 5. Desktop nav click (instant visual active state)
+    // 3. Desktop nav click (instant visual active state)
     var desktopNavItem = event.target.closest('[data-desktop-nav-link]');
     if (desktopNavItem) {
       var allDesktopItems = document.querySelectorAll('[data-desktop-nav-link]');
@@ -143,7 +76,7 @@
       });
     }
 
-    // 6. Floating nav click (instant visual gliding)
+    // 4. Floating nav click (instant visual gliding)
     var navItem = event.target.closest('.floatnav [data-nav-item]');
     if (navItem) {
       var floatnav = navItem.closest('.floatnav');
@@ -165,14 +98,6 @@
       }
     }
   });
-
-  // Dialog close focus restore
-  document.addEventListener('close', function (event) {
-    if (event.target && event.target.id === 'sheet') {
-      if (sheetOpener) sheetOpener.focus();
-      sheetOpener = null;
-    }
-  }, true);
 
   /* ---------- accordion exclusivity ---------- */
   function initAccordions() {

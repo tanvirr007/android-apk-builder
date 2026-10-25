@@ -3,8 +3,8 @@
  * brand marks use fill. No runtime icon library, no external requests.
  */
 export type IconName =
-  | 'home' | 'zap' | 'book' | 'terminal' | 'wrench'
-  | 'sun' | 'moon' | 'github' | 'copy' | 'check' | 'close' | 'chevron'
+  | 'home' | 'book' | 'wrench'
+  | 'sun' | 'moon' | 'github' | 'copy' | 'check' | 'chevron'
   | 'globe' | 'telegram';
 
 const icons: Record<IconName, { viewBox: string; fill: boolean; body: string }> = {
@@ -13,20 +13,10 @@ const icons: Record<IconName, { viewBox: string; fill: boolean; body: string }> 
     fill: false,
     body: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.7V21h5.2v-5.5h3.6V21H19V9.7"/>',
   },
-  zap: {
-    viewBox: '0 0 24 24',
-    fill: false,
-    body: '<path d="M13 2 4.5 14h5.7l-1.2 8L20.5 10h-6.1L13.5 2z"/>',
-  },
   book: {
     viewBox: '0 0 24 24',
     fill: false,
     body: '<path d="M6 2.5h12.5v19H8.5a2.5 2.5 0 0 1-2.5-2.5V2.5z"/><path d="M6 16h12.5"/>',
-  },
-  terminal: {
-    viewBox: '0 0 24 24',
-    fill: false,
-    body: '<path d="m4 6.5 5.5 5.5L4 17.5"/><path d="M12.5 19H20"/>',
   },
   wrench: {
     viewBox: '0 0 24 24',
@@ -67,11 +57,6 @@ const icons: Record<IconName, { viewBox: string; fill: boolean; body: string }> 
     viewBox: '0 0 24 24',
     fill: false,
     body: '<path d="m4 12.5 5 5L20 6.5"/>',
-  },
-  close: {
-    viewBox: '0 0 24 24',
-    fill: false,
-    body: '<path d="M6 6l12 12M18 6 6 18"/>',
   },
   chevron: {
     viewBox: '0 0 24 24',

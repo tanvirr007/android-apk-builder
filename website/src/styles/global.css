@@ -88,9 +88,6 @@
   .layout {
     padding-block: var(--sp-8) var(--sp-12);
   }
-  .site-footer {
-    padding-block: var(--sp-6);
-  }
 }
 
 @media (min-width: 1024px) {
@@ -128,11 +125,6 @@
   --accent-ink: #0F1512;
   --code-ink: #DAE4DD;
   --error: #E0857A;
-}
-
-[data-theme="dark"] [data-btn] {
-  --btn-bg: #2FA05F;
-  --btn-ink: #0F1512;
 }
 
 /* ============================================================
@@ -262,15 +254,6 @@ code {
 }
 .skip:focus-visible { transform: none; }
 .skip:hover { color: var(--accent-ink); }
-
-.sr-only {
-  position: absolute;
-  width: 1px; height: 1px;
-  margin: -1px; padding: 0; border: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
 
 /* ============================================================
    Site Header
@@ -481,36 +464,6 @@ pre code {
 .copy[data-done] .state-copy { display: none; }
 .copy[data-done] .state-check { display: inline-flex; }
 
-[data-btn] {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-2);
-  min-height: 44px;
-  padding: var(--sp-2) var(--sp-4);
-  font: inherit;
-  font-weight: var(--fw-semibold);
-  letter-spacing: -0.005em;
-  background: var(--accent);
-  color: var(--accent-ink);
-  border: 0;
-  border-radius: var(--r-control);
-  cursor: pointer;
-  text-decoration: none;
-  transition: filter var(--t-fast) ease;
-}
-[data-btn]:hover { filter: brightness(1.08); color: var(--accent-ink); }
-
-[data-btn][data-quiet] {
-  background: none;
-  color: var(--accent);
-  text-decoration: none;
-}
-[data-btn][data-quiet]:hover {
-  color: var(--accent);
-  filter: none;
-  text-decoration: underline;
-}
-
 /* ============================================================
    Floating icon navigation
    ___________________________________________________________ */
@@ -612,69 +565,6 @@ pre code {
   0% { transform: scale(0.82); }
   50% { transform: scale(1.18); }
   100% { transform: scale(1); }
-}
-
-/* ============================================================
-   Reference table
-   ___________________________________________________________ */
-
-.tbl-wrap { overflow-x: auto; scrollbar-width: thin; }
-
-table { border-collapse: collapse; width: 100%; min-width: 640px; }
-caption {
-  text-align: start;
-  color: var(--muted);
-  font-size: var(--fs-caption);
-  font-weight: var(--fw-medium);
-  padding-block-end: var(--sp-2);
-}
-th, td { padding: var(--sp-2) var(--sp-3); vertical-align: top; text-align: start; }
-thead th {
-  font-size: var(--fs-caption);
-  font-weight: var(--fw-semibold);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
-  color: var(--muted);
-  border-block-end: 1px solid var(--line);
-}
-tbody tr { border-block-end: 1px solid var(--line); }
-tbody tr:last-child { border-block-end: 0; }
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 0 var(--sp-2);
-  font-family: var(--font-code);
-  font-size: var(--fs-caption);
-  color: var(--accent);
-  background: none;
-  border: 0;
-  border-radius: var(--r-chip);
-  cursor: pointer;
-  text-decoration: none;
-}
-.chip:hover { background: var(--inset); text-decoration: underline; }
-
-/* ============================================================
-   Step list (Quick Start / How to Use)
-   ___________________________________________________________ */
-
-.steps { list-style: none; margin: 0; padding: 0; counter-reset: step; max-width: var(--measure-wide); }
-.step { counter-increment: step; padding-block: var(--sp-6); }
-.step + .step { border-block-start: 1px solid var(--line); }
-.step-n {
-  font-size: var(--fs-caption);
-  font-weight: var(--fw-bold);
-  letter-spacing: 0.02em;
-  color: var(--accent);
-  display: block;
-}
-.step h2 {
-  margin-block: 0 var(--sp-2);
-  font-size: var(--fs-lead);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--tracking-snug);
 }
 
 /* ============================================================
@@ -797,7 +687,7 @@ tbody tr:last-child { border-block-end: 0; }
 .faq details[open] .faq-caret { transform: rotate(90deg); }
 .faq .faq-body { padding-inline-start: var(--sp-6); padding-block-end: var(--sp-4); }
 .faq .faq-body p { max-width: none; }
-.faq faq-label, .faq [data-label] {
+.faq [data-label] {
   display: block;
   font-size: var(--fs-caption);
   font-weight: var(--fw-semibold);
@@ -822,152 +712,6 @@ tbody tr:last-child { border-block-end: 0; }
     grid-column: 1 / -1;
   }
 }
-
-/* ============================================================
-   Sheet (bottom sheet on mobile, dialog on desktop)
-   ___________________________________________________________ */
-
-.sheet {
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--ink);
-  padding: 0;
-  width: min(100%, 560px);
-  max-height: 86dvh;
-}
-
-.sheet[data-sheet] .sheet-frame { position: relative; }
-
-.sheet::backdrop {
-  background: transparent;
-}
-
-/* mobile-first: anchored to the bottom edge */
-@media (max-width: 768px) {
-  .sheet {
-    position: fixed;
-    inset: auto 0 0 0;
-    margin: 0 auto;
-    width: 100%;
-    max-width: 560px;
-    border-block-end: 0;
-    border-start-start-radius: var(--r-surface);
-    border-start-end-radius: var(--r-surface);
-    transform: translateY(24px);
-    opacity: 0;
-  }
-  .sheet[open] {
-    transform: none;
-    opacity: 1;
-  }
-  @starting-style {
-    .sheet[open] { transform: translateY(24px); opacity: 0; }
-  }
-}
-
-@media (min-width: 769px) {
-  .sheet {
-    position: fixed;
-    inset: 0;
-    margin: auto;
-    height: fit-content;
-    border-radius: var(--r-surface);
-    transform: translateY(8px);
-    opacity: 0;
-  }
-  .sheet[open] { transform: none; opacity: 1; }
-  @starting-style {
-    .sheet[open] { transform: translateY(8px); opacity: 0; }
-  }
-}
-
-.sheet[open]::backdrop {
-  background: rgb(0 0 0 / 40%);
-}
-
-.sheet-frame {
-  padding: var(--sp-6);
-  overflow-y: auto;
-  max-height: 86dvh;
-}
-
-.sheet-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-4);
-  margin-block-end: var(--sp-2);
-}
-
-.sheet-frame h2 {
-  font-size: var(--fs-lead);
-  font-weight: var(--fw-semibold);
-  margin: 0;
-  text-wrap: balance;
-}
-
-[data-sclose] {
-  width: 44px;
-  height: 44px;
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  color: var(--muted);
-  cursor: pointer;
-}
-[data-sclose]:hover { background: var(--inset); color: var(--ink); }
-[data-sclose] svg { width: 18px; height: 18px; }
-
-.sheet-frame .mono-label {
-  font-size: var(--fs-caption);
-  font-weight: var(--fw-semibold);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
-  color: var(--muted);
-  margin-block: var(--sp-6) var(--sp-1);
-}
-
-.sheet-frame .kbd-row {
-  display: flex;
-  gap: var(--sp-2);
-  flex-wrap: wrap;
-  margin-block: var(--sp-2) 0;
-}
-
-.sheet-frame .kbd-row button {
-  min-height: 44px;
-  padding: var(--sp-2) var(--sp-4);
-  font: inherit;
-  background: var(--inset);
-  color: var(--ink);
-  border: 0;
-  border-radius: var(--r-control);
-  cursor: pointer;
-  font-weight: var(--fw-semibold);
-}
-.sheet-frame .kbd-row button[aria-checked="true"] {
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-
-/* ============================================================
-   Footer
-   ___________________________________________________________ */
-
-.site-footer {
-  border-block-start: 1px solid var(--line);
-  padding-block: var(--sp-6) calc(var(--sp-6) + var(--nav-clearance));
-  color: var(--muted);
-  font-size: var(--fs-caption);
-}
-.site-footer .layout { padding-block: 0; }
-.site-footer p { max-width: none; margin: 0; }
-.site-footer a { color: var(--muted); }
-.site-footer a:hover { color: var(--accent); }
 
 /* ============================================================
    View Transitions & Page Navigation Animations
@@ -1087,8 +831,7 @@ html[data-nav-direction="backward"]::view-transition-new(main-content) {
 
 @media print {
   .site-header { border-block-end: 1px solid #999; }
-  .header-actions, .desktop-nav, .floatnav, .copy, [data-btn] { display: none !important; }
+  .header-actions, .desktop-nav, .floatnav, .copy { display: none !important; }
   body { min-height: 0; }
-  .site-footer { border: 0; }
   pre, .cmd { background: none; border: 1px solid #999; }
 }
