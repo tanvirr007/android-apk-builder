@@ -15,16 +15,34 @@
   --code-ink: #24352C;
   --error: #B4463A;
 
-  /* type scale (static, per DESIGN.md) */
+  /* type scale (per DESIGN.md) */
   --fs-caption: 14px;
   --fs-body: 16px;
   --fs-lead: 19px;
   --fs-h3: 22px;
   --fs-h2: 26px;
-  --fs-h1: 31px;
+  --fs-h1: 32px;
+
+  /* font weights */
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* line heights */
+  --lh-tight: 1.25;
+  --lh-snug: 1.35;
+  --lh-body: 1.65;
+  --lh-code: 1.5;
+
+  /* tracking / letter spacing */
+  --tracking-tight: -0.02em;
+  --tracking-snug: -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
 
   /* families */
-  --font-ui: "Source Sans 3", system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-ui: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-code: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
 
   /* radius */
@@ -95,7 +113,11 @@ body {
   color: var(--ink);
   font-family: var(--font-ui);
   font-size: var(--fs-body);
-  line-height: 1.55;
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -106,20 +128,38 @@ body {
 main { flex: 1; }
 
 h1, h2, h3 {
-  font-weight: 700;
-  line-height: 1.25;
+  font-family: var(--font-ui);
   text-wrap: balance;
   margin-block: 0 var(--sp-4);
 }
 
-h1 { font-size: var(--fs-h1); }
-h2 { font-size: var(--fs-h2); margin-block: var(--sp-12) var(--sp-4); }
-h3 { font-size: var(--fs-h3); }
+h1 {
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+}
+
+h2 {
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-snug);
+  margin-block: var(--sp-12) var(--sp-4);
+}
+
+h3 {
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-snug);
+}
 
 p {
   max-width: var(--measure);
   text-align: start;
   text-wrap: pretty;
+  line-height: var(--lh-body);
   margin-block: 0 var(--sp-4);
 }
 
@@ -212,8 +252,9 @@ code {
   gap: var(--sp-2);
   text-decoration: none;
   color: var(--ink);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   font-size: var(--fs-body);
+  letter-spacing: var(--tracking-snug);
   transition: color var(--t-fast) ease;
 }
 .brand:hover {
@@ -260,6 +301,8 @@ code {
 .page-head h1 { margin-block-end: var(--sp-2); }
 .page-head .lead {
   font-size: var(--fs-lead);
+  line-height: var(--lh-snug);
+  font-weight: var(--fw-regular);
   color: var(--muted);
   margin-block: 0;
 }
@@ -286,6 +329,7 @@ code {
 .cmd-caption {
   color: var(--muted);
   font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
 }
 
 pre {
@@ -299,7 +343,7 @@ pre code {
   background: none;
   padding: 0;
   color: var(--code-ink);
-  line-height: 1.5;
+  line-height: var(--lh-code);
 }
 
 .copy {
@@ -311,6 +355,7 @@ pre code {
   padding: var(--sp-1) var(--sp-2);
   font: inherit;
   font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
   color: var(--muted);
   background: none;
   border: 0;
@@ -332,7 +377,8 @@ pre code {
   min-height: 44px;
   padding: var(--sp-2) var(--sp-4);
   font: inherit;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
+  letter-spacing: -0.005em;
   background: var(--accent);
   color: var(--accent-ink);
   border: 0;
@@ -462,13 +508,15 @@ caption {
   text-align: start;
   color: var(--muted);
   font-size: var(--fs-caption);
+  font-weight: var(--fw-medium);
   padding-block-end: var(--sp-2);
 }
 th, td { padding: var(--sp-2) var(--sp-3); vertical-align: top; text-align: start; }
 thead th {
   font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-wide);
   color: var(--muted);
   border-block-end: 1px solid var(--line);
 }
@@ -500,11 +548,17 @@ tbody tr:last-child { border-block-end: 0; }
 .step + .step { border-block-start: 1px solid var(--line); }
 .step-n {
   font-size: var(--fs-caption);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.02em;
   color: var(--accent);
   display: block;
 }
-.step h2 { margin-block: 0 var(--sp-2); font-size: var(--fs-lead); }
+.step h2 {
+  margin-block: 0 var(--sp-2);
+  font-size: var(--fs-lead);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-snug);
+}
 
 /* ============================================================
    Troubleshooting accordion
@@ -542,8 +596,9 @@ tbody tr:last-child { border-block-end: 0; }
 .faq faq-label, .faq [data-label] {
   display: block;
   font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-wide);
   color: var(--muted);
   margin-block: var(--sp-3) var(--sp-1);
 }
@@ -626,6 +681,7 @@ tbody tr:last-child { border-block-end: 0; }
 
 .sheet-frame h2 {
   font-size: var(--fs-lead);
+  font-weight: var(--fw-semibold);
   margin: 0;
   text-wrap: balance;
 }
@@ -648,8 +704,9 @@ tbody tr:last-child { border-block-end: 0; }
 
 .sheet-frame .mono-label {
   font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-wide);
   color: var(--muted);
   margin-block: var(--sp-6) var(--sp-1);
 }
@@ -670,7 +727,7 @@ tbody tr:last-child { border-block-end: 0; }
   border: 0;
   border-radius: var(--r-control);
   cursor: pointer;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 .sheet-frame .kbd-row button[aria-checked="true"] {
   background: var(--accent);

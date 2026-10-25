@@ -4,18 +4,25 @@ Machine-readable design contract for the site, kept in `docs/` alongside the des
 
 ## Fonts
 
-- "Source Sans 3": UI and body text
+- "Poppins": UI, headings, body text, and interface controls
 - "JetBrains Mono": code blocks, inline code, and commands
-- Fallback stack: system-ui, Segoe UI, Roboto, Helvetica, Arial
+- Fallback stack: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif
+
+## Font weights
+
+- 400 (Regular): body text, lead paragraph body, list items, and descriptions
+- 500 (Medium): command captions, copy buttons, table captions
+- 600 (SemiBold): h3 headings, interactive buttons, table headers, step headers, modal headers
+- 700 (Bold): h1 headings, h2 headings, brand name, step badges
 
 ## Font sizes
 
-- 14px: captions, code blocks, and table cell details
-- 16px: body text and interface controls
-- 19px: minor headings, lead paragraphs, and small section titles
+- 14px: captions, code blocks, copy buttons, and table cell details
+- 16px: body text, brand name, and interface controls
+- 19px: minor headings, lead paragraphs, step titles, and modal headers
 - 22px: h3 headings
 - 26px: h2 headings
-- 31px: h1 headings
+- 32px: h1 headings
 
 ## Colors
 
