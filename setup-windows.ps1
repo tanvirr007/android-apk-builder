@@ -693,10 +693,20 @@ function Inspect-GradleModule([string]$RootDir, [string]$ModulePath, [hashtable]
     # Java Toolchain
     if ($content -match 'jvmToolchain\s*\(?\s*(\d+)\s*\)?') {
         $info.JavaToolchain = [int]$matches[1]
+    } elseif ($content -match 'JavaLanguageVersion\.of\s*\(\s*(\d+)\s*\)') {
+        $info.JavaToolchain = [int]$matches[1]
     } elseif ($content -match 'JavaVersion\.VERSION_(\d+)') {
         $info.SourceCompatibility = [int]$matches[1]
     } elseif ($content -match 'jvmTarget\s*=\s*["''](\d+)["'']') {
         $info.SourceCompatibility = [int]$matches[1]
+    } elseif ($content -match 'JavaVersion\.toVersion\s*\(\s*libs\.versions\.([a-zA-Z0-9_\-\.]+)') {
+        $vKey = $matches[1]
+        if ($Catalog.Versions.ContainsKey($vKey)) {
+            $parsed = 0
+            if ([int]::TryParse($Catalog.Versions[$vKey], [ref]$parsed)) {
+                $info.SourceCompatibility = $parsed
+            }
+        }
     }
 
     # Signing Configs
@@ -769,6 +779,21 @@ function Inspect-AndroidProject([string]$RootDir) {
         }
     }
 
+    # Gradle Daemon JVM criteria (Gradle 8.8+)
+    $daemonJvmPropPath = Join-Path $RootDir "gradle\gradle-daemon-jvm.properties"
+    $daemonJvmVersion = 0
+    $daemonJvmVendor = ""
+    if (Test-Path $daemonJvmPropPath) {
+        $djLines = Get-Content $daemonJvmPropPath -ErrorAction SilentlyContinue
+        foreach ($djl in $djLines) {
+            if ($djl -match '^\s*toolchainVersion\s*=\s*(\d+)') {
+                $daemonJvmVersion = [int]$matches[1]
+            } elseif ($djl -match '^\s*toolchainVendor\s*=\s*([a-zA-Z0-9_\-\.]+)') {
+                $daemonJvmVendor = $matches[1].Trim().ToUpperInvariant()
+            }
+        }
+    }
+
     $moduleNames = Discover-ProjectModules $RootDir
     $modulesInfo = @()
     foreach ($m in $moduleNames) {
@@ -796,6 +821,9 @@ function Inspect-AndroidProject([string]$RootDir) {
         HasWrapperProperties    = (Test-Path $wrapperPropPath)
         HasWrapperBat           = (Test-Path (Join-Path $RootDir "gradlew.bat"))
         HasWrapperJar           = (Test-Path (Join-Path $RootDir "gradle\wrapper\gradle-wrapper.jar"))
+        DaemonJvmVersion        = $daemonJvmVersion
+        DaemonJvmVendor         = $daemonJvmVendor
+        HasDaemonJvmProperties  = (Test-Path $daemonJvmPropPath)
         AllModules              = $modulesInfo
         ApplicationModules      = $appModules
     }
@@ -980,12 +1008,38 @@ function Query-JdkVersion([string]$JdkHome) {
 
     $is64Bit = $combinedOut -match '64-Bit' -or (Test-Path (Join-Path $JdkHome "lib\modules"))
 
+    $vendor = ""
+    $releaseFile = Join-Path $JdkHome "release"
+    if (Test-Path $releaseFile) {
+        $relLines = Get-Content $releaseFile -ErrorAction SilentlyContinue
+        foreach ($rl in $relLines) {
+            if ($rl -match '^\s*IMPLEMENTOR\s*=\s*["'']?([^"''\r\n]+)["'']?') {
+                $vendor = $matches[1].Trim()
+                break
+            }
+        }
+    }
+    if (-not $vendor) {
+        if ($JdkHome -match '(?i)Android Studio\\jb[re]|JetBrains') {
+            $vendor = "JetBrains"
+        } elseif ($JdkHome -match '(?i)Adoptium|Temurin') {
+            $vendor = "Eclipse Adoptium"
+        } elseif ($JdkHome -match '(?i)Microsoft') {
+            $vendor = "Microsoft"
+        } elseif ($JdkHome -match '(?i)Zulu') {
+            $vendor = "Azul"
+        } elseif ($JdkHome -match '(?i)Corretto') {
+            $vendor = "Amazon"
+        }
+    }
+
     if ($major -gt 0) {
         return [PSCustomObject]@{
             Path         = $JdkHome
             MajorVersion = $major
             RawVersion   = $rawVersion
             Is64Bit      = $is64Bit
+            Vendor       = $vendor
         }
     }
     return $null
@@ -1015,6 +1069,7 @@ function Find-InstalledJdks([string]$CustomJdk = "") {
 
     if ($env:USERPROFILE) {
         $searchRoots += "$env:USERPROFILE\.jdks\*"
+        $searchRoots += "$env:USERPROFILE\.gradle\jdks\*"
     }
 
     foreach ($pat in $searchRoots) {
@@ -1062,13 +1117,23 @@ function Find-InstalledJdks([string]$CustomJdk = "") {
     return $verifiedJdks
 }
 
-function Select-CompatibleJdk([array]$InstalledJdks, [int]$MinJdk, [int]$MaxJdk, [int]$PreferredJdk) {
+function Select-CompatibleJdk([array]$InstalledJdks, [int]$MinJdk, [int]$MaxJdk, [int]$PreferredJdk, [string]$PreferredVendor = "") {
     if ($InstalledJdks.Count -eq 0) {
         return $null
     }
 
-    # First attempt: match preferred JDK major version exactly
+    # First attempt: match preferred JDK major version (and vendor if specified)
     if ($PreferredJdk -gt 0) {
+        if (-not [string]::IsNullOrEmpty($PreferredVendor)) {
+            $prefVendorMatch = $InstalledJdks | Where-Object {
+                $_.MajorVersion -eq $PreferredJdk -and $_.Is64Bit -and (
+                    ($_.Vendor -and $_.Vendor.ToUpperInvariant().Contains($PreferredVendor.ToUpperInvariant())) -or
+                    ($_.Path.ToUpperInvariant().Contains($PreferredVendor.ToUpperInvariant()))
+                )
+            } | Select-Object -First 1
+            if ($prefVendorMatch) { return $prefVendorMatch }
+        }
+
         $prefMatch = $InstalledJdks | Where-Object { $_.MajorVersion -eq $PreferredJdk -and $_.Is64Bit } | Select-Object -First 1
         if ($prefMatch) { return $prefMatch }
     }
@@ -1079,6 +1144,14 @@ function Select-CompatibleJdk([array]$InstalledJdks, [int]$MinJdk, [int]$MaxJdk,
     })
 
     if ($compatible.Count -gt 0) {
+        if (-not [string]::IsNullOrEmpty($PreferredVendor)) {
+            $vendorMatch = $compatible | Where-Object {
+                ($_.Vendor -and $_.Vendor.ToUpperInvariant().Contains($PreferredVendor.ToUpperInvariant())) -or
+                ($_.Path.ToUpperInvariant().Contains($PreferredVendor.ToUpperInvariant()))
+            } | Select-Object -First 1
+            if ($vendorMatch) { return $vendorMatch }
+        }
+
         # Prefer LTS versions: 17, then 21, then highest
         $match17 = $compatible | Where-Object { $_.MajorVersion -eq 17 } | Select-Object -First 1
         if ($match17) { return $match17 }
@@ -1939,6 +2012,9 @@ if (-not [string]::IsNullOrEmpty($BuildToolsOverride)) {
 
 Write-Info "Android Gradle Plugin (AGP): $(if ($projectSpec.AgpVersion) { $projectSpec.AgpVersion } else { 'Auto (8.8+ assumed)' })"
 Write-Info "Gradle Wrapper Version: $(if ($projectSpec.WrapperGradleVersion) { $projectSpec.WrapperGradleVersion } else { 'Missing (Target: ' + $compatibility.TargetGradle + ')' })"
+if ($projectSpec.DaemonJvmVersion -gt 0) {
+    Write-Info "Gradle Daemon JVM: Java $($projectSpec.DaemonJvmVersion)$(if ($projectSpec.DaemonJvmVendor) { ' (Vendor: ' + $projectSpec.DaemonJvmVendor + ')' } else { '' })"
+}
 Write-Info "Compatible JDK Range: Java $($compatibility.MinJdk) - Java $($compatibility.MaxJdk)"
 Write-Info "Target build-tools: $effectiveBuildTools"
 
@@ -1964,12 +2040,33 @@ $installedJdks = Find-InstalledJdks $JdkPath
 Write-Info "Discovered $( $installedJdks.Count ) verified JDK installations on host."
 
 foreach ($j in $installedJdks) {
-    Write-Dim ('Found JDK {0} (64-bit: {1}) at: {2}' -f $j.MajorVersion, $j.Is64Bit, $j.Path)
+    $vendorInfo = if ($j.Vendor) { " [$($j.Vendor)]" } else { "" }
+    Write-Dim ('Found JDK {0} (64-bit: {1}){2} at: {3}' -f $j.MajorVersion, $j.Is64Bit, $vendorInfo, $j.Path)
 }
 
-$preferredVersion = if ($selectedAppModule.JavaToolchain -gt 0) { $selectedAppModule.JavaToolchain } elseif ($selectedAppModule.SourceCompatibility -gt 0) { $selectedAppModule.SourceCompatibility } else { 17 }
+$selectedJdk = $null
+if (-not [string]::IsNullOrEmpty($JdkPath) -and (Test-Path $JdkPath)) {
+    $explicitMatch = $installedJdks | Where-Object { $_.Path.TrimEnd('\') -eq $JdkPath.TrimEnd('\') } | Select-Object -First 1
+    if ($explicitMatch) {
+        $selectedJdk = $explicitMatch
+    }
+}
 
-$selectedJdk = Select-CompatibleJdk $installedJdks $compatibility.MinJdk $compatibility.MaxJdk $preferredVersion
+if (-not $selectedJdk) {
+    $preferredVersion = if ($projectSpec.DaemonJvmVersion -gt 0) {
+        $projectSpec.DaemonJvmVersion
+    } elseif ($selectedAppModule.JavaToolchain -gt 0) {
+        $selectedAppModule.JavaToolchain
+    } elseif ($selectedAppModule.SourceCompatibility -gt 0) {
+        $selectedAppModule.SourceCompatibility
+    } else {
+        17
+    }
+
+    $preferredVendor = if ($projectSpec.DaemonJvmVendor) { $projectSpec.DaemonJvmVendor } else { "" }
+
+    $selectedJdk = Select-CompatibleJdk $installedJdks $compatibility.MinJdk $compatibility.MaxJdk $preferredVersion $preferredVendor
+}
 
 if (-not $selectedJdk -and -not $SkipJdkInstall) {
     Write-WarningMsg "No compatible JDK ($($compatibility.MinJdk)-$($compatibility.MaxJdk)) located on host."
@@ -1980,7 +2077,7 @@ if (-not $selectedJdk -and -not $SkipJdkInstall) {
         $wRes = Invoke-NativeCommand -Executable "winget" -ArgumentList @("install", $pkgId, "--accept-source-agreements", "--accept-package-agreements", "--silent") -IgnoreExitCode
         if ($wRes.Success) {
             $installedJdks = Find-InstalledJdks
-            $selectedJdk = Select-CompatibleJdk $installedJdks $compatibility.MinJdk $compatibility.MaxJdk $preferredVersion
+            $selectedJdk = Select-CompatibleJdk $installedJdks $compatibility.MinJdk $compatibility.MaxJdk $preferredVersion $preferredVendor
         }
     }
 }
@@ -1991,7 +2088,8 @@ if (-not $selectedJdk) {
     Exit-WithCode 1
 }
 
-Write-Success ('Selected Active JDK: Java {0} ({1})' -f $selectedJdk.MajorVersion, $selectedJdk.Path)
+$activeVendorInfo = if ($selectedJdk.Vendor) { " [$($selectedJdk.Vendor)]" } else { "" }
+Write-Success ('Selected Active JDK: Java {0}{1} ({2})' -f $selectedJdk.MajorVersion, $activeVendorInfo, $selectedJdk.Path)
 
 # Scope JAVA_HOME and PATH strictly to current PowerShell process
 $env:JAVA_HOME = $selectedJdk.Path
@@ -2125,6 +2223,10 @@ switch ($BuildType) {
 }
 
 $gradleArgs = @() + $tasksToRun + $memProfile.ExtraArgs
+if ($installedJdks.Count -gt 0) {
+    $validJdkPaths = @($installedJdks | ForEach-Object { $_.Path } | Select-Object -Unique)
+    $gradleArgs += "-Dorg.gradle.java.installations.paths=$($validJdkPaths -join ',')"
+}
 if ($gradleInitScript -and (Test-Path $gradleInitScript)) {
     $gradleArgs += @("--init-script", $gradleInitScript)
 }

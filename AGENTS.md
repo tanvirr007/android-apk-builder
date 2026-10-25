@@ -48,10 +48,10 @@ When editing [setup-windows.ps1](file:///c:/Users/tanvir/Desktop/android-apk-bui
 | :--- | :--- |
 | **Param Block** | Strongly-typed parameter declarations (`[CmdletBinding()]`), validation sets (`ValidateSet`), defaults, and switch flags. |
 | **Section 1** | Logging and diagnostics formatting (`Write-Log`, `Write-Success`, `Write-Diagnostic`), and `Invoke-NativeCommand` execution wrapper. |
-| **Section 2** | Project root discovery and configuration parsers: extracts `compileSdk`, `targetSdk`, AGP version, and module layout from Groovy, Kotlin DSL, and Version Catalogs (`libs.versions.toml`). |
+| **Section 2** | Project root discovery and configuration parsers: extracts `compileSdk`, `targetSdk`, AGP version, Gradle Daemon JVM criteria (`gradle-daemon-jvm.properties`), and module layout from Groovy, Kotlin DSL, and Version Catalogs (`libs.versions.toml`). |
 | **Section 3** | Compatibility resolution engine: evaluates project AGP against Gradle and JDK compatibility matrices. |
 | **Section 4** | Hardware profiling and memory tuning: dynamically calculates JVM heap ceilings and applies tailored `GRADLE_OPTS`. |
-| **Section 5** | JDK discovery and selection: scans standard paths, Android Studio `jbr`, Scoop, Chocolatey, and Winget for matching JDK versions (8, 11, 17, 21). |
+| **Section 5** | JDK discovery and selection: scans standard paths, Android Studio `jbr`, user and Gradle `.jdks` caches, and winget for matching JDK versions (8, 11, 17, 21) and vendor requirements. |
 | **Section 6** | Android SDK management: localizes SDK, validates `cmdline-tools`, accepts official licenses, updates `local.properties`, and installs missing platform/build-tools. |
 | **Section 7** | Gradle wrapper recovery: verifies `gradlew.bat` and `gradle-wrapper.jar`, restoring missing or corrupted wrappers dynamically if necessary. |
 | **Section 8** | Artifact verification and signature inspection: extracts SHA-256 hashes, runs `apksigner verify` (v1, v2, v3, v4 schemes), and handles key generation. |

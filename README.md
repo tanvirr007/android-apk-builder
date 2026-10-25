@@ -226,9 +226,10 @@ The automation engine executes a structured six-stage pipeline to compile projec
 - Configures environment variables strictly for the active process session, avoiding changes to the Windows registry.
 
 ### Stage 3: JDK resolution and validation
-- Searches standard system paths for verified 64-bit JDK installations: Eclipse Adoptium, Microsoft OpenJDK, Oracle Java, BellSoft Liberica, Amazon Corretto, Azul Zulu, Android Studio embedded runtimes, and the user `.jdks` directory.
-- Runs `java.exe -version` to verify major versions and 64-bit architecture support.
-- Matches available runtimes against project requirements, prioritizing LTS releases Java 17 and Java 21.
+- Searches standard system paths for verified 64-bit JDK installations: Eclipse Adoptium, Microsoft OpenJDK, Oracle Java, BellSoft Liberica, Amazon Corretto, Azul Zulu, Android Studio embedded runtimes, and the user `.jdks` and `.gradle/jdks` directories.
+- Evaluates Gradle Daemon JVM criteria (`gradle/gradle-daemon-jvm.properties`), matching requested Java versions and vendors (such as JetBrains Runtime) directly to existing host JDKs to prevent redundant toolchain downloads.
+- Runs `java.exe -version` and reads `release` manifests to verify major versions, vendors, and 64-bit architecture support.
+- Matches available runtimes against project requirements, prioritizing LTS releases Java 17 and Java 21, and forwards all verified host JDKs via `org.gradle.java.installations.paths`.
 - If no compatible JDK is detected, the engine attempts an unattended installation of Eclipse Adoptium Temurin OpenJDK through Windows Package Manager (`winget`).
 
 ### Stage 4: Android SDK, platform tools, and licenses setup
