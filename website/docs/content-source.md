@@ -1,27 +1,21 @@
-# Content Source Map
+# Content source map
 
-Every page's copy traces to a README section so the site can never drift from
-the tool's real behavior. When the README changes, update the page, then note
-the sync here and in `progress.md`.
+Every page copy traces to a README section so the site reflects the engine behavior. When the repository README changes, update the corresponding page and log the sync here and in `progress.md`.
 
-| Page | Source (repo root README.md) | Notes |
+| Page | README source | Notes |
 |---|---|---|
-| Home `/` | "Overview" (lines 10-26), "The Self-Adapting Architecture" | Condensed to prose + short list. No marketing claims added |
-| Quick Start `/quick-start` | "1. Quick Start" → wizard walkthrough + "Basic Invocations" | Steps mirror build.bat behavior exactly |
-| How to Use `/how-to-use` | "1-Click Interactive Build Wizard", "Basic Invocations", section 2 "Conceptual Foundation", section 3 stage descriptions, memory section 5, section 4 key improvements | The long-form operation manual |
-| CLI Reference `/cli-reference` | "Complete Parameter Reference" table (lines 119-146) | 24 parameters. Sheet details + example commands must quote README semantics |
-| Troubleshooting `/troubleshooting` | Section 7 "Troubleshooting and Diagnostic Dictionary" (issues 1-8) | Copy is close to verbatim: these are real error strings |
-| 404 `/404` | n/a | Own copy, references Home / How to Use / GitHub issues |
-| Home compatibility matrix mention | Section 4.3 matrix table | Only referenced as a mention, not duplicated as a table (avoid stale duplication) |
+| Home `/` | Overview and self-adapting architecture | Condensed to prose and a summary list without marketing claims |
+| How to use `/how-to-use` | Interactive build wizard, basic invocations, architecture stages, memory configuration, and key improvements | Long-form operator manual |
+| Troubleshooting `/troubleshooting` | Troubleshooting and diagnostic dictionary, issues 1 through 8 | Error strings match terminal output exactly |
+| 404 `/404` | Not applicable | Custom page linking to Home, How to use, and GitHub issues |
 
 ## Copy policy
 
-- Commands are copied character-for-character from README where they exist.
-- Error strings in Troubleshooting are exact mono text (users paste-search them).
-- Explanatory prose is rewritten in this site's voice (docs-utilitarian,
-  zero marketing), but must not contradict README.
-- Visitor counters and dynamic badges from README are excluded (static site,
-  no third-party requests).
+- Commands match the repository README verbatim.
+- Error strings in Troubleshooting use exact monospace text so users can search them.
+- Explanatory prose uses direct, technical language conforming to `docs/unslop.md` without marketing claims.
+- Dynamic visitor counters and badges are excluded to keep the site fully static.
 
-Sync log:
-- 2026-10-25: initial mapping, all sections current as of this date.
+## Sync log
+
+- 2026-10-25: Initial mapping verified against repository README.

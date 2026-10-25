@@ -4,44 +4,45 @@ import CodeBlock from '../components/CodeBlock.astro';
 
 const title = 'Home';
 const description =
-  'Build Android APK and AAB files from Command Prompt or PowerShell without Android Studio. A self-adapting pipeline that finds the JDK, sets up the SDK, and signs the release for you.';
+  'Build Android APK and AAB files from Command Prompt or PowerShell on Windows 10 and 11 without Android Studio.';
 ---
 <BaseLayout title={title} description={description} wide>
   <div class="page-head">
     <h1>Build Android APKs without Android Studio</h1>
     <p class="lead">
       Android APK Builder compiles Kotlin, Java, and Jetpack Compose projects
-      straight from Command Prompt or PowerShell on Windows 10 and 11.
+      from Command Prompt or PowerShell on Windows 10 and 11.
     </p>
   </div>
 
   <p>
-    The tool is a single PowerShell engine (plus a <code>build.bat</code> launcher) that
-    inspects your project, picks the right JDK and Gradle version, prepares the Android
-    SDK, compiles, signs, and copies the artifacts into <code>dist</code>. Android Studio
-    idles at 4 to 8 GB of RAM before you build anything; this engine runs in a terminal
-    and doses memory per hardware profile instead.
+    The tool pairs a PowerShell engine with a <code>build.bat</code> launcher.
+    It inspects your project, selects the required JDK and Gradle versions,
+    prepares the Android SDK, compiles the project, signs release binaries, and
+    copies outputs into <code>dist</code>. While Android Studio consumes 4 GB to
+    8 GB of RAM at idle, this engine runs in the terminal and tunes memory usage
+    to host hardware.
   </p>
 
   <h2>What the engine does automatically</h2>
   <ul>
     <li>
-      Reads Groovy, Kotlin DSL, and version catalog build files to learn the SDK,
-      build-tools, and AGP version of the project.
+      Reads Groovy, Kotlin DSL, and version catalog build files to identify
+      required SDK, build-tools, and AGP versions.
     </li>
-    <li>Resolves JDK, Gradle, and AGP against an integrated compatibility matrix.</li>
+    <li>Resolves JDK, Gradle, and AGP versions against an integrated compatibility matrix.</li>
     <li>
-      Profiles host RAM and applies matching JVM heap ceilings, GC choice, and worker
-      limits, so 4 GB laptops still build reliably.
+      Profiles host RAM and applies matching JVM heap limits, garbage collection
+      options, and worker counts to prevent out-of-memory errors on 4 GB systems.
     </li>
-    <li>Installs missing JDKs and SDK packages, recovering broken Gradle wrappers.</li>
+    <li>Installs missing JDKs and SDK packages, and restores damaged Gradle wrappers.</li>
     <li>
-      Signs release builds, generates a keystore when none exists, and verifies the
-      result with SHA-256 hashes plus apksigner v1 through v4 checks.
+      Signs release builds, generates a keystore when none exists, and verifies
+      outputs with SHA-256 hashes and apksigner v1 through v4 checks.
     </li>
     <li>
-      Keeps the host clean: environment variables are scoped to the session, and
-      artifacts are copied, never moved.
+      Scopes environment variables to the active session and copies build
+      artifacts instead of moving them.
     </li>
   </ul>
 
@@ -56,12 +57,12 @@ const description =
   />
 
   <p>
-    From there, simply double-click on the <code>build.bat</code> file or right-click and choose <strong>Run as administrator</strong> if needed.
-    The interactive wizard launches and asks for your Android project path. Simply type or paste the path, or drag and drop your project folder directly into the window to start building.
+    Double-click <code>build.bat</code>, or right-click and choose <strong>Run as administrator</strong> if required.
+    The interactive wizard prompts for your Android project path. Type or paste the path, or drag and drop your project folder into the window to build.
   </p>
 
   <p>
-    The <a href="/how-to-use">How to Use</a> page explains every mode,
-    command-line invocation, release signing, and hardware profiling in detail.
+    The <a href="/how-to-use">How to use</a> page documents available modes,
+    command-line flags, release signing, and memory configurations.
   </p>
 </BaseLayout>

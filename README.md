@@ -1,6 +1,6 @@
 # Android APK Builder
 
-### Universal Headless Android APK and AAB Compilation Engine for Windows
+### Universal headless Android APK and AAB compilation engine for Windows
 
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=flat-square&logo=windows&logoColor=white)](https://microsoft.com/windows)
 ![Visitors](https://visitor-badge.laobi.icu/badge?page_id=tanvirr007.android-apk-builder)
@@ -9,63 +9,63 @@
 
 ## Overview
 
-Android APK Builder is a standalone, universal build automation engine and comprehensive technical guide designed to compile any modern Android application (Kotlin, Java, Jetpack Compose) directly on Microsoft Windows from the command line without requiring Android Studio.
+Android APK Builder is a standalone build automation engine that compiles Kotlin, Java, and Jetpack Compose Android applications on Windows 10 and 11 from the command line without Android Studio.
 
-Android Studio typically consumes between 4 GB and 8 GB of RAM merely sitting idle in the background. Android APK Builder bypasses the IDE entirely, providing an autonomous, self-adapting compilation pipeline that operates natively inside PowerShell and Command Prompt.
+Android Studio consumes 4 GB to 8 GB of RAM at idle. Android APK Builder runs directly in PowerShell or Command Prompt, configuring memory to match host hardware and compiling projects without an IDE.
 
-### The Self-Adapting Architecture
+### Self-adapting architecture
 
-The engine automatically analyzes the host machine and the target project before executing any build tasks:
+The engine analyzes host hardware and project configuration files before starting a build:
 
-- Dynamic Project Inspection: Recursively parses Groovy (`build.gradle`), Kotlin DSL (`build.gradle.kts`), and modern Gradle Version Catalogs (`gradle/libs.versions.toml`) to extract target SDKs, build-tools, Android Gradle Plugin (AGP) versions, and module topologies.
-- Compatibility Resolution: Evaluates project components against an integrated AGP, Gradle, and JDK compatibility matrix to guarantee that compiler versions and runtime environments align before building.
-- Hardware-Aware Memory Tuning: Analyzes physical RAM and applies tailored Java Virtual Machine (JVM) heap ceilings, garbage collection algorithms, and worker concurrency limits. It keeps budget hardware (such as 4 GB RAM systems) responsive while unlocking parallel caching on high-spec workstations.
-- Isolated Session Scoping: Configures all environment variables strictly within the lifetime of the running script session, leaving the Windows User Registry clean and free from permanent global overrides.
-- Non-Destructive Operations: Safely updates project configuration files (such as `local.properties`) without stripping user comments or custom paths, and harvests artifacts by copying rather than moving them, protecting Gradle build caches.
-- Multi-Tier Artifact Verification: Generates cryptographic SHA-256 hashes for all outputs and executes deep signature inspection across APK Signature Schemes v1, v2, v3, and v4 via the official `apksigner` tool.
+- **Project inspection.** Parses Groovy build files, Kotlin DSL scripts, and Gradle version catalogs to extract target SDKs, build-tools, Android Gradle Plugin versions, and project module structures.
+- **Compatibility resolution.** Evaluates project components against an integrated compatibility matrix to verify compiler and runtime requirements before launching Gradle.
+- **Hardware-aware memory tuning.** Reads physical RAM and configures JVM heap limits, garbage collection options, and worker thread limits to prevent out-of-memory errors on 4 GB systems while enabling parallel caching on multi-core workstations.
+- **Session-scoped environment.** Sets environment variables strictly within the running script process, leaving the Windows registry and persistent environment untouched.
+- **Non-destructive operations.** Updates `sdk.dir` in `local.properties` using forward slashes while preserving existing comments and custom properties, and copies generated artifacts rather than moving them.
+- **Signature verification.** Computes SHA-256 hashes for output packages and runs verification across APK signature schemes v1, v2, v3, and v4 using `apksigner`.
 
 ---
 
-## 1. Quick Start
+## 1. Quick start
 
 Android APK Builder provides two primary interfaces:
-1. `build.bat`: The universal 1-click Windows batch launcher. Double-click to launch the interactive build wizard, drag-and-drop an Android project folder directly onto it, or pass CLI arguments without worrying about PowerShell execution policies.
-2. `setup-windows.ps1`: The native PowerShell automation engine providing full control over all build parameters.
+1. `build.bat`: Windows batch launcher that runs the interactive wizard, accepts dragged project folders, and forwards command-line flags while bypassing PowerShell execution policies.
+2. `setup-windows.ps1`: PowerShell automation engine that exposes all build parameters.
 
-### 1-Click Interactive Build Wizard (`build.bat`)
+### Interactive build wizard
 
-For the fastest and simplest experience on Windows:
+To run the interactive wizard on Windows:
 1. Double-click `build.bat` or run it from Command Prompt:
    ```cmd
    build.bat
    ```
-2. If executed outside an Android project folder (such as directly inside this builder directory), the wizard prompts you to enter or drag-and-drop the target project directory.
-3. Choose your build mode:
-   - Press **Enter** to immediately build with recommended defaults (`Release` APK).
-   - Type **C** and press **Enter** to customize build parameters (Debug/Release, APK/AAB, clean build, and low-memory mode).
-4. The terminal window pauses upon completion (`Press Enter to exit...`) so you can review harvested artifact paths and signature verification without the window closing automatically.
+2. When executed outside an Android project directory, the wizard prompts for the project path. Type the path or drag and drop your project folder into the window.
+3. Choose a build option:
+   - Press **Enter** to build a Release APK with default settings.
+   - Press **C** and then **Enter** to customize build variants, package formats, clean build tasks, and memory limits.
+4. The terminal pauses after completion so you can review harvested artifact paths and signature verification details before closing.
 
-You can also drag and drop your Android project folder directly onto `build.bat` in Windows Explorer to build it immediately.
+Dragging and dropping an Android project folder onto `build.bat` in File Explorer starts the build immediately.
 
-### Basic Invocations
+### Basic invocations
 
-#### Run Inside Your Android Project Directory
-Open Command Prompt or PowerShell, navigate to the target Android project root, and run:
+#### Run inside an Android project directory
+Open Command Prompt or PowerShell, navigate to the target Android project directory, and run:
 
 ```cmd
 cd C:\path\to\your-android-project
 C:\path\to\android-apk-builder\build.bat -BuildType Release
 ```
 
-#### Specify the Project Directory Explicitly
-You can invoke the builder from anywhere by passing `-ProjectDir`:
+#### Specify the project directory explicitly
+Pass `-ProjectDir` to run the builder from any location:
 
 ```cmd
 C:\path\to\android-apk-builder\build.bat -ProjectDir "C:\path\to\your-android-project" -BuildType Release
 ```
 
-#### Build Debug, Release, or Both
-Select the exact variant to assemble:
+#### Build debug, release, or both variants
+Select the variant to assemble:
 
 ```cmd
 rem Build debug APK
@@ -78,8 +78,8 @@ rem Build both debug and release variants in a single run
 build.bat -ProjectDir "C:\path\to\project" -BuildType Both
 ```
 
-#### Select Artifact Type (APK, AAB, or Both)
-Choose whether to produce installable APK packages, Google Play App Bundles (AAB), or both:
+#### Select artifact types
+Choose whether to produce installable APK packages, Google Play AAB bundles, or both:
 
 ```cmd
 rem Build Google Play App Bundle (.aab)
@@ -89,246 +89,246 @@ rem Build both APK and AAB packages
 build.bat -ProjectDir "C:\path\to\project" -ArtifactType Both
 ```
 
-#### Target Specific Multi-Module Projects
-If the repository contains multiple application modules or features, target the desired module:
+#### Target specific multi-module projects
+For repositories with multiple application modules, target the desired module:
 
 ```cmd
 build.bat -ProjectDir "C:\path\to\project" -Module ":app" -BuildType Release
 ```
 
-#### Memory Tuning Controls
-Force specific hardware execution profiles:
+#### Memory tuning controls
+Apply specific hardware profiles:
 
 ```cmd
-rem Force low-memory profile for budget systems (<= 4 GB / 8 GB RAM)
+rem Force low-memory profile for budget systems with 4 GB to 8 GB RAM
 build.bat -ProjectDir "C:\path\to\project" -ForceLowMem
 
-rem Force high-performance profile for powerful multi-core workstations
+rem Force high-performance profile for multi-core workstations
 build.bat -ProjectDir "C:\path\to\project" -HighMem
 ```
 
-#### Headless Automation and CI/CD Switches
-Automate licensing, pre-clean workspaces, or run offline:
+#### Continuous integration and automation switches
+Accept SDK licenses, clean workspaces, or build offline:
 
 ```cmd
 build.bat -ProjectDir "C:\path\to\project" -AcceptLicenses -CleanFirst -OutputDir "C:\builds"
 ```
 
-### Complete Parameter Reference
+### Parameter reference
 
 | Parameter | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `-ProjectDir` | String | Current Directory | Path to the target Android project root. |
 | `-BuildType` | String | `Release` | Build variant to assemble: `Release`, `Debug`, or `Both`. |
 | `-ArtifactType` | String | `APK` | Output package format: `APK`, `AAB`, or `Both`. |
-| `-Module` | String | Auto-detected | Specific application module name (e.g., `:app` or `app`). |
-| `-Variant` | String | Auto-detected | Specific build variant name (e.g., `release`, `freeRelease`). |
+| `-Module` | String | Auto-detected | Specific application module name, such as `:app` or `app`. |
+| `-Variant` | String | Auto-detected | Specific build variant name, such as `release` or `freeRelease`. |
 | `-OutputDir` | String | `dist` | Destination folder relative to the project root for harvested artifacts. |
-| `-ForceLowMem` | Switch | Off | Forces the low-memory profile (<= 1.5 GB JVM heap, single worker, no-daemon). |
-| `-HighMem` | Switch | Off | Forces high-performance profile (4 GB heap, parallel workers, build cache). |
-| `-AcceptLicenses` | Switch | Off | Automatically accepts official Android SDK licenses non-interactively. |
+| `-ForceLowMem` | Switch | Off | Forces the low-memory profile with a 1.5 GB heap ceiling, single worker, and no daemon. |
+| `-HighMem` | Switch | Off | Forces the high-performance profile with a 4 GB heap, parallel workers, and build cache. |
+| `-AcceptLicenses` | Switch | Off | Accepts official Android SDK licenses non-interactively. |
 | `-CleanFirst` | Switch | Off | Executes the Gradle `clean` task prior to assembling artifacts. |
-| `-Offline` | Switch | Off | Runs Gradle compilation in offline mode (`--offline`). |
+| `-Offline` | Switch | Off | Runs Gradle compilation in offline mode using cached dependencies. |
 | `-DryRun` | Switch | Off | Inspects project, resolves dependencies, and plans build without compiling. |
 | `-SkipSdkInstall` | Switch | Off | Skips downloading or updating missing Android SDK platforms and build-tools. |
 | `-SkipJdkInstall` | Switch | Off | Skips automated winget installation of OpenJDK if host lacks compatible JDK. |
 | `-SdkPath` | String | Auto-detected | Explicit custom file system path to the Android SDK. |
 | `-JdkPath` | String | Auto-detected | Explicit custom file system path to the Java Development Kit. |
-| `-CompileSdkOverride`| Integer | Auto-detected | Overrides detected `compileSdk` version (e.g., `35`). |
-| `-BuildToolsOverride`| String | Auto-detected | Overrides detected `build-tools` version string (e.g., `35.0.0`). |
+| `-CompileSdkOverride`| Integer | Auto-detected | Overrides detected `compileSdk` version, such as `35`. |
+| `-BuildToolsOverride`| String | Auto-detected | Overrides detected `build-tools` version string, such as `35.0.0`. |
 | `-VerboseLog` | Switch | Off | Enables verbose diagnostic output during execution. |
 | `-Interactive` | Switch | Off | Launches the interactive step-by-step build wizard. |
 | `-KeystorePath` | String | Auto-generated | Path to an existing custom `.jks` or `.keystore` file. |
 | `-StorePassword` | String | `android` | Keystore password for release signing. |
 | `-KeyAlias` | String | `release` | Key alias name for release signing. |
 | `-KeyPassword` | String | `StorePassword` | Private key password. |
-| `-KeyDName` | String | Auto-generated | Certificate Distinguished Name (e.g. `CN=Dev,O=Org,C=US`). |
+| `-KeyDName` | String | Auto-generated | Certificate Distinguished Name, such as `CN=Dev,O=Org,C=US`. |
 | `-SkipSigning` | Switch | Off | Bypasses automated release keystore generation and APK signing. |
 
 ---
 
-## 2. Conceptual Foundation: How Code Becomes an APK
+## 2. How source code becomes an APK
 
 When building an Android application from the terminal, the build process transforms human-readable source code into a signed, aligned, and optimized binary package:
 
 ```
 +--------------------------------------------------------------------------+
-| 1. Source Code Files (.kt, .java, .xml)                                  |
-|    Human-readable instructions defining your UI, data, and logic.        |
+| 1. Source Code Files: .kt, .java, .xml                                   |
+|    Instructions defining your UI, data structures, and logic.            |
 +--------------------------------------------------------------------------+
                                      |
                                      v
 +--------------------------------------------------------------------------+
-| 2. Kotlin & Java Compilers (kotlinc, javac via JDK 17+)                  |
+| 2. Kotlin and Java Compilers: kotlinc and javac via JDK 17 or higher     |
 |    Translates source code into standard Java Virtual Machine bytecode    |
-|    (.class files).                                                       |
+|    in .class files.                                                      |
 +--------------------------------------------------------------------------+
                                      |
                                      v
 +--------------------------------------------------------------------------+
-| 3. Android Dexer & Code Optimizer (D8 / R8)                              |
-|    Converts JVM bytecode into Dalvik Executable (.dex) bytecode          |
-|    optimized for Android ART (Android Runtime). In Release builds, R8    |
-|    removes unused methods and shrinks classes (tree-shaking).            |
+| 3. Android Dexer and Code Optimizer: D8 and R8                           |
+|    Converts JVM bytecode into Dalvik Executable .dex bytecode            |
+|    for the Android Runtime. Release builds run R8 tree-shaking to        |
+|    remove unused methods and classes.                                    |
 +--------------------------------------------------------------------------+
                                      |
                                      v
 +--------------------------------------------------------------------------+
-| 4. Android Asset Packaging Tool (AAPT2)                                  |
+| 4. Android Asset Packaging Tool: AAPT2                                   |
 |    Compiles XML layouts, drawables, and strings into compact binary XML  |
-|    and builds the compiled resources table (resources.arsc).             |
+|    and builds the compiled resources table in resources.arsc.            |
 +--------------------------------------------------------------------------+
                                      |
                                      v
 +--------------------------------------------------------------------------+
-| 5. Package Assembly & Alignment (zipalign & apksigner)                   |
-|    Packages all .dex files, assets, and metadata into a compressed .apk, |
+| 5. Package Assembly, Alignment, and Signing: zipalign and apksigner      |
+|    Packages all .dex files, assets, and metadata into a compressed APK,  |
 |    aligns data boundaries to 4-byte offsets, and signs the archive.      |
 +--------------------------------------------------------------------------+
 ```
 
-To run this entire pipeline, you do not need the full Android Studio desktop application. You only need:
-1. Java Development Kit (JDK 17 or 21): Runs the build system and compilers.
+Running this pipeline requires three toolchain components rather than the full Android Studio desktop application:
+1. Java Development Kit: JDK 17 or 21 to run the build system and compilers.
 2. Gradle: The orchestration engine coordinating dependencies, tasks, and plugins.
-3. Android SDK Command-Line Tools: Provides core toolchain binaries (`sdkmanager`, `aapt2`, `d8`, and `apksigner`).
+3. Android SDK Command-Line Tools: Provides core toolchain binaries including `sdkmanager`, `aapt2`, `d8`, and `apksigner`.
 
 ---
 
-## 3. The 6-Stage Compilation Pipeline
+## 3. Six-stage compilation pipeline
 
-The automation engine executes a structured, six-stage pipeline to guarantee reliable compilation across different project configurations:
+The automation engine executes a structured six-stage pipeline to compile projects:
 
 ```
-[Stage 1: Project Inspection]  -> Parses build files, catalogs, and module trees.
+[Stage 1: Project Inspection]   - Parses build files, catalogs, and module trees.
              |
-[Stage 2: Memory Profiling]    -> Benchmarks system RAM and selects JVM profiles.
+[Stage 2: Memory Profiling]     - Benchmarks system RAM and selects JVM profiles.
              |
-[Stage 3: JDK Resolution]      -> Verifies host JDKs, matches matrix, or installs via winget.
+[Stage 3: JDK Resolution]       - Verifies host JDKs, matches matrix, or installs via winget.
              |
-[Stage 4: SDK & Tools Setup]   -> Sets up SDK paths, nested tools, and licenses.
+[Stage 4: SDK & Tools Setup]    - Sets up SDK paths, nested tools, and licenses.
              |
-[Stage 5: Gradle Bootstrapping]-> Validates wrapper or downloads official distribution.
+[Stage 5: Gradle Bootstrapping] - Validates wrapper or downloads official distribution.
              |
-[Stage 6: Build & Harvesting]  -> Compiles, copies to output, calculates hashes, and verifies signatures.
+[Stage 6: Build & Harvesting]   - Compiles, copies to output, calculates hashes, and verifies signatures.
 ```
 
-### Stage 1: Project Inspection and Compatibility Discovery
+### Stage 1: Project inspection and compatibility discovery
 - Scans `settings.gradle` and `settings.gradle.kts` to identify all project modules.
-- Parses module build files and Gradle Version Catalogs (`gradle/libs.versions.toml`).
-- Extracts key properties: `compileSdk`, `targetSdk`, `minSdk`, `buildToolsVersion`, AGP version, Kotlin version, Java toolchain targets, signing configurations, and namespaces.
-- Evaluates the Android Gradle Plugin version against the built-in compatibility matrix to determine minimum and maximum supported JDK versions and target Gradle distributions.
+- Parses module build files and Gradle version catalogs at `gradle/libs.versions.toml`.
+- Extracts build properties: `compileSdk`, `targetSdk`, `minSdk`, `buildToolsVersion`, AGP version, Kotlin version, Java toolchain targets, signing configurations, and namespaces.
+- Evaluates the Android Gradle Plugin version against the built-in compatibility matrix to determine supported JDK versions and target Gradle distributions.
 
-### Stage 2: Hardware Profiling and Constrained-Memory Tuning
-- Queries host memory capacity via Windows WMI (`Win32_OperatingSystem` and `Win32_PhysicalMemory`).
-- Automatically categorizes the host machine into appropriate performance tiers:
-  - Constrained Systems (<= 8.5 GB RAM): Applies conservative heap ceilings, lightweight garbage collection (`-XX:+UseParallelGC`), single or dual worker threads, and disables persistent background daemons (`--no-daemon`).
-  - High-Spec Workstations (> 8.5 GB RAM): Allocates larger heaps (4 GB+), activates Gradle daemon caching, enables task parallelization, and activates `--build-cache`.
-- Configures environment variables strictly for the active process session, avoiding persistent Windows User Registry modification.
+### Stage 2: Hardware profiling and memory tuning
+- Queries host memory capacity through Windows WMI classes `Win32_OperatingSystem` and `Win32_PhysicalMemory`.
+- Categorizes the host machine into performance tiers:
+  - Systems with 8.5 GB RAM or less: Applies conservative heap limits, lightweight garbage collection via `-XX:+UseParallelGC`, single or dual worker threads, and disables persistent background daemons.
+  - Systems with more than 8.5 GB RAM: Allocates heaps of 4 GB or more, enables daemon caching, allows parallel tasks, and enables `--build-cache`.
+- Configures environment variables strictly for the active process session, avoiding changes to the Windows registry.
 
-### Stage 3: Java Development Kit (JDK) Resolution and Validation
-- Searches for verified 64-bit JDK installations across standard system paths: Eclipse Adoptium, Microsoft OpenJDK, Oracle Java, BellSoft Liberica, Amazon Corretto, Azul Zulu, Android Studio embedded runtimes (JBR/JRE), and the user `.jdks` directory.
-- Queries `java.exe -version` to verify exact major version numbers and 64-bit architecture support.
-- Matches available runtimes against project compatibility requirements, prioritizing LTS releases (Java 17 and Java 21).
-- If no compatible JDK is detected, it automatically attempts unattended installation of Eclipse Adoptium Temurin OpenJDK via Windows Package Manager (`winget`).
+### Stage 3: JDK resolution and validation
+- Searches standard system paths for verified 64-bit JDK installations: Eclipse Adoptium, Microsoft OpenJDK, Oracle Java, BellSoft Liberica, Amazon Corretto, Azul Zulu, Android Studio embedded runtimes, and the user `.jdks` directory.
+- Runs `java.exe -version` to verify major versions and 64-bit architecture support.
+- Matches available runtimes against project requirements, prioritizing LTS releases Java 17 and Java 21.
+- If no compatible JDK is detected, the engine attempts an unattended installation of Eclipse Adoptium Temurin OpenJDK through Windows Package Manager (`winget`).
 
-### Stage 4: Android SDK, Platform Tools, and Licenses Setup
-- Discovers existing Android SDK roots from custom parameters, project `local.properties`, environment variables (`ANDROID_HOME`, `ANDROID_SDK_ROOT`), user AppData paths (`%LOCALAPPDATA%\Android\Sdk`), or standard installation directories.
-- Non-destructively generates or updates `local.properties` with forward-slash formatted paths (`sdk.dir=C:/...`), preserving all other custom properties and generating a backup (`local.properties.bak`).
-- Validates the `cmdline-tools` directory hierarchy. If tools are extracted loosely without the required `latest` directory, the engine restructures them automatically. If missing, it downloads and installs the official Google command-line tools package.
-- Manages SDK license agreements by automatically feeding confirmations non-interactively when `-AcceptLicenses` is specified.
-- Verifies and downloads required SDK platform packages (`platforms;android-<compileSdk>`) and build tools (`build-tools;<version>`).
+### Stage 4: Android SDK, platform tools, and licenses setup
+- Discovers existing Android SDK roots from custom parameters, project `local.properties`, `ANDROID_HOME`, `ANDROID_SDK_ROOT`, AppData paths, or standard installation directories.
+- Generates or updates `local.properties` with forward-slash formatted paths, such as `sdk.dir=C:/Android`, preserving existing properties and creating a `local.properties.bak` backup.
+- Validates the `cmdline-tools` directory structure. If tools are extracted outside the required `latest` folder, the engine restructures them automatically. If missing, it downloads the official Google command-line tools package.
+- Accepts SDK license agreements non-interactively when `-AcceptLicenses` is specified.
+- Verifies and downloads required SDK platform packages and build tools matching the project target.
 
-### Stage 5: Gradle Wrapper Verification and Recovery
+### Stage 5: Gradle wrapper verification and recovery
 - Verifies the integrity of `gradlew.bat`, `gradle/wrapper/gradle-wrapper.jar`, and `gradle/wrapper/gradle-wrapper.properties`.
-- Checks that `gradle-wrapper.jar` is valid and non-empty (protecting against incomplete Git checkouts).
-- If the wrapper is missing or corrupted, the engine downloads the official Gradle binary distribution matched to the project's AGP requirements, runs `gradle wrapper`, and generates a clean wrapper environment.
+- Confirms that `gradle-wrapper.jar` is valid and non-empty to guard against incomplete Git checkouts.
+- If the wrapper is missing or corrupted, the engine downloads the official Gradle binary distribution matched to the project AGP requirements, runs `gradle wrapper`, and generates a clean wrapper environment.
 
-### Stage 6: Compilation, Transparent Signing Injection, Artifact Harvesting, and Signature Verification
-- Constructs the target Gradle task list based on the requested `-BuildType` (`assembleDebug`, `assembleRelease`, or both) and `-ArtifactType` (APK, AAB, or both).
-- Scopes tasks to the identified application module (for example, `:app:assembleRelease`).
-- Transparent Release Signing Injection: Automatically ensures a project release keystore exists or generates one. Generates and passes a transient Gradle init script (`--init-script`) that intercepts unconfigured release signing configs in `afterEvaluate`, eliminating local build crashes caused by missing CI secrets (`:app:validateSigningRelease FAILED: Keystore file not set for signing config release`).
-- Post-Build Alignment & Signing: If any release APK is produced unsigned, it automatically aligns the archive to 4-byte boundaries using `zipalign` and signs it across v1, v2, and v3 schemes using `apksigner`.
-- Self-Healing Keystore Preservation & Mirroring: Stores the keystore in `android-apk-builder/dist/<project-name>/` and mirrors it alongside the built APKs into the project's own `dist/` directory. Automatically recovers keystores across subsequent builds to preserve signature continuity and prevent Android device install conflicts (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`).
-- CI/CD Deployment Manifest: Writes `signing-credentials.txt` containing passwords, alias, certificate SHA-1 and SHA-256 fingerprints, full Base64-encoded keystore for GitHub Actions secrets, and a ready-to-use CI workflow step.
-- Harvests generated artifacts into the specified output directory (`dist/` by default) and mirrors them to `android-apk-builder/dist/<project-name>/`.
+### Stage 6: Compilation, signing, harvesting, and signature verification
+- Constructs the target Gradle task list based on the requested `-BuildType` and `-ArtifactType`.
+- Scopes tasks to the identified application module, such as `:app:assembleRelease`.
+- Injects release signing configurations: Creates a project release keystore if none exists, and supplies a temporary init script to configure release signing in Gradle, avoiding local build crashes caused by missing keystore secrets.
+- Aligns and signs release APKs: When an unsigned release APK is produced, the engine aligns the archive to 4-byte boundaries with `zipalign` and signs it across v1, v2, and v3 schemes using `apksigner`.
+- Preserves and mirrors keystores: Stores the keystore in `android-apk-builder/dist/<project-name>/` and mirrors it into the project `dist/` folder. Reuses existing keystores across subsequent builds to maintain signature continuity.
+- Generates a deployment manifest: Writes `signing-credentials.txt` containing passwords, key aliases, certificate fingerprints, a Base64-encoded keystore for CI secrets, and a ready GitHub Actions step.
+- Copies harvested artifacts into the specified output directory, defaulting to `dist/`, and mirrors them to `android-apk-builder/dist/<project-name>/`.
 - Calculates SHA-256 cryptographic hashes for every harvested artifact.
-- Invokes `apksigner` to verify APK signatures, identifying active signature schemes (v1, v2, v3, v4) and certificate details.
+- Invokes `apksigner` to verify signatures and report active schemes v1, v2, v3, and v4.
 
 ---
 
-## 4. Key Architectural Improvements
+## 4. Key architectural improvements
 
-Android APK Builder includes substantial architectural improvements over conventional terminal scripts:
+Android APK Builder improves upon conventional terminal build scripts across several areas:
 
-### 1. Non-Destructive local.properties Management
-- Previous Approach: Standard scripts overwrite `local.properties` completely with `Set-Content`, erasing developer-defined properties such as `ndk.dir`, `cmake.dir`, and custom build flags.
-- Self-Adapting Engine: Reads the file line by line, updates or inserts only the `sdk.dir` key using normalized forward slashes, preserves all comments and unrelated properties, and writes a safety backup to `local.properties.bak`.
+### 1. Non-destructive local.properties management
+- Previous scripts: Overwrote `local.properties` completely, erasing developer-defined properties such as `ndk.dir`, `cmake.dir`, and custom build flags.
+- This engine: Reads the file line by line, updates only the `sdk.dir` key using normalized forward slashes, preserves all existing comments and properties, and creates a backup file at `local.properties.bak`.
 
-### 2. Session-Scoped Environment Variables
-- Previous Approach: Global calls to `[Environment]::SetEnvironmentVariable(..., "User")` wrote values permanently to `HKEY_CURRENT_USER\Environment`. This altered system-wide behavior for all future terminals, other development tools, and user accounts.
-- Self-Adapting Engine: Scopes `$env:JAVA_HOME`, `$env:ANDROID_HOME`, and `$env:GRADLE_OPTS` strictly to the executing PowerShell process. Once the script finishes, the host system environment remains entirely unmodified.
+### 2. Session-scoped environment variables
+- Previous scripts: Called `[Environment]::SetEnvironmentVariable` to set permanent User registry values, altering paths globally for future terminals and other developer tools.
+- This engine: Scopes `$env:JAVA_HOME`, `$env:ANDROID_HOME`, and `$env:GRADLE_OPTS` strictly to the executing PowerShell process. Once the build finishes, the host environment remains untouched.
 
-### 3. Comprehensive AGP, Gradle, and JDK Compatibility Matrix
-- Previous Approach: Hardcoded JDK 17 and a single fixed Gradle version, causing build failures when processing legacy projects or modern AGP 8.8+ releases.
-- Self-Adapting Engine: Evaluates the project AGP version and wrapper settings dynamically to enforce correct compatibility:
+### 3. AGP, Gradle, and JDK compatibility matrix
+- Previous scripts: Hardcoded JDK 17 and a single fixed Gradle version, causing build failures when compiling older projects or AGP 8.8+ releases.
+- This engine: Evaluates the project AGP version and wrapper settings dynamically to apply matching toolchain versions:
 
-| AGP Version | Compatible Gradle Version | Supported JDK Range | Default Target Gradle |
+| AGP version | Compatible Gradle version | Supported JDK range | Default target Gradle |
 | :--- | :--- | :--- | :--- |
 | AGP 8.8+ | 8.10.2 to 8.13+ | JDK 17 to JDK 21 | Gradle 8.11.1 |
 | AGP 8.4 to 8.7 | 8.6 to 8.11+ | JDK 17 to JDK 21 | Gradle 8.7 |
-| AGP 8.0 to 8.3 | 8.0 to 8.4 | JDK 17+ | Gradle 8.2 |
+| AGP 8.0 to 8.3 | 8.0 to 8.4 | JDK 17 or higher | Gradle 8.2 |
 | AGP 7.4 | 7.5 to 7.6 | JDK 11 to JDK 19 | Gradle 7.6 |
 | AGP 7.0 to 7.3 | 7.0 to 7.4 | JDK 11 to JDK 17 | Gradle 7.4.2 |
 | AGP 4.0 to 4.2 | 6.1.1 to 6.9 | JDK 8 to JDK 11 | Gradle 6.9 |
 
-### 4. Version Catalog TOML Parsing (`libs.versions.toml`)
-- Previous Approach: Regular expressions parsed only literal numbers within `build.gradle` (such as `compileSdk = 34`). Modern projects declaring `compileSdk = libs.versions.compileSdk` caused the parser to fall back to an arbitrary default.
-- Self-Adapting Engine: Reads `gradle/libs.versions.toml`, parses `[versions]` and `[plugins]` sections, and resolves version aliases dynamically across all modules.
+### 4. Version catalog parsing
+- Previous scripts: Relied on regular expressions matching only literal numbers within `build.gradle`, such as `compileSdk = 34`. Projects declaring versions via version catalogs fell back to arbitrary defaults.
+- This engine: Reads `gradle/libs.versions.toml`, parses `[versions]` and `[plugins]` tables, and resolves version references across all modules.
 
-### 5. Multi-Module Project Support and Name Collision Prevention
-- Previous Approach: Assumed all projects had a single `:app` module, breaking multi-module repositories and feature-split projects.
-- Self-Adapting Engine: Discovers all modules declared in `settings.gradle` / `settings.gradle.kts`, identifies application modules versus library modules, and allows targeting via `-Module`. When harvesting outputs, it prefixes file names with the module name if duplicate artifact names are detected.
+### 5. Multi-module project support and collision prevention
+- Previous scripts: Assumed all projects contained only a single `:app` module, failing on multi-module repositories and feature-split projects.
+- This engine: Detects modules declared in `settings.gradle` or `settings.gradle.kts`, identifies application modules versus library modules, and allows targeting via `-Module`. If multiple modules produce identical artifact names, it prefixes file names with the module name during harvesting.
 
-### 6. Non-Destructive Artifact Harvesting (Copy vs. Move)
-- Previous Approach: Executed `Move-Item` on artifacts in `app/build/outputs/`. This cleared Gradle's task outputs, invalidating build caches and forcing complete rebuilds on subsequent invocations.
-- Self-Adapting Engine: Uses `Copy-Item` to replicate artifacts into the `-OutputDir` (`dist/`), leaving internal build outputs intact for fast incremental rebuilding.
+### 6. Copying artifacts instead of moving them
+- Previous scripts: Moved files out of Gradle build outputs, clearing task caches and forcing complete rebuilds on subsequent runs.
+- This engine: Copies artifacts into `-OutputDir`, leaving internal build outputs intact for incremental rebuilds.
 
-### 7. Automated Signature Verification and SHA-256 Hashes
-- Previous Approach: Build scripts concluded after compiling, leaving users uncertain whether release packages were signed or unsigned.
-- Self-Adapting Engine: Runs `apksigner verify --verbose` on all output APKs, explicitly detailing signature verification status across v1, v2, v3, and v4 schemes, distinguishing debug signatures from release certificates, and calculating SHA-256 hashes for release distribution.
+### 7. Signature verification and SHA-256 hashes
+- Previous scripts: Ended execution after compilation without verifying signatures, leaving output signing status unclear.
+- This engine: Runs `apksigner verify --verbose` on all output APKs, reports scheme support across v1, v2, v3, and v4, and generates SHA-256 hashes for release distribution manifests.
 
-### 8. Network Resilience and Download Retry Logic
-- Previous Approach: Single download requests for tools often failed on unstable connections, resulting in corrupted zip files.
-- Self-Adapting Engine: Wraps downloads in multi-attempt retry loops with timeout protection and minimum payload size validation, verifying archive integrity before extraction.
+### 8. Network retry logic
+- Previous scripts: Single download requests for tools failed on unstable connections, resulting in corrupted archives.
+- This engine: Wraps tool downloads in retry loops with timeout protection and payload size validation before extraction.
 
 ---
 
-## 5. Memory Architecture: Potato PC vs. Workstation
+## 5. Memory architecture and hardware profiles
 
-Gradle and the Kotlin compiler execute inside Java Virtual Machines. Unconstrained builds allocate large heaps, which on memory-limited machines can trigger heavy Windows pagefile swapping (100% disk usage and unresponsive operating systems).
+Gradle and the Kotlin compiler run inside Java Virtual Machines. Unconstrained heap allocation on memory-limited machines triggers heavy Windows pagefile swapping, leading to disk thrashing and system unresponsiveness.
 
-### Understanding the Memory Flags
+### Memory flags
 
-- `-Xmx` (Maximum Heap Size): The ceiling of physical memory that Java objects can occupy. On an 8 GB system, setting `-Xmx1536m` leaves sufficient RAM for Windows background tasks. On a 32 GB workstation, setting `-Xmx4096m` enables deeper caching in memory.
-- `-XX:MaxMetaspaceSize`: Controls memory for class definitions and reflection metadata. Kotlin and Jetpack Compose generate substantial synthetic classes; setting this between `512m` and `1024m` prevents native memory leaks.
-- `-XX:+UseParallelGC`: Uses a lightweight parallel garbage collector with lower CPU and tracking overhead than G1GC, optimizing throughput on resource-constrained systems.
-- `--no-daemon`: Instructs the Gradle worker process to terminate immediately after compilation completes, returning all allocated memory directly to the operating system.
-- `--max-workers`: Restricts concurrent compilation threads, preventing thread starvation on dual-core and quad-core CPUs.
+- `-Xmx`: Caps the physical heap memory available to Java objects. On an 8 GB system, setting `-Xmx1536m` leaves RAM available for system processes. On a 32 GB workstation, setting `-Xmx4096m` enables deeper in-memory caching.
+- `-XX:MaxMetaspaceSize`: Limits memory for class definitions and reflection metadata. Setting this between `512m` and `1024m` accommodates synthetic classes generated by Kotlin and Jetpack Compose.
+- `-XX:+UseParallelGC`: Enables a lightweight parallel garbage collector with lower CPU overhead than G1GC, improving throughput on constrained machines.
+- `--no-daemon`: Instructs the Gradle worker process to exit immediately after compilation completes, returning memory to the operating system.
+- `--max-workers`: Limits concurrent compilation threads to avoid CPU contention.
 
-### Hardware Memory Tuning Matrix
+### Hardware memory matrix
 
-| Hardware Profile | Physical RAM | `GRADLE_OPTS` Configuration | Daemon Mode | Worker Threads | Parallel Tasks | Build Cache |
+| Hardware profile | Physical RAM | `GRADLE_OPTS` settings | Daemon mode | Worker threads | Parallel tasks | Build cache |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| Ultra-Low (Potato PC) | <= 4.5 GB | `-Xmx1024m -XX:MaxMetaspaceSize=384m -XX:+UseParallelGC` | `--no-daemon` | 1 worker | Disabled | Disabled |
-| Budget PC | 4.5 GB to 8.5 GB | `-Xmx1536m -XX:MaxMetaspaceSize=512m -XX:+UseParallelGC` | `--no-daemon` | 2 workers | Disabled | Optional |
-| Balanced PC | 8.5 GB to 16 GB | `-Xmx2048m -XX:MaxMetaspaceSize=512m` | `--daemon` | 4 workers | Enabled (`--parallel`) | Enabled (`--build-cache`) |
-| High-End Workstation | > 16 GB | `-Xmx4096m -XX:MaxMetaspaceSize=1024m` | `--daemon` | All logical cores | Enabled (`--parallel`) | Enabled (`--build-cache`) |
+| Constrained systems | 4.5 GB or less | `-Xmx1024m -XX:MaxMetaspaceSize=384m -XX:+UseParallelGC` | `--no-daemon` | 1 worker | Disabled | Disabled |
+| Budget systems | 4.5 GB to 8.5 GB | `-Xmx1536m -XX:MaxMetaspaceSize=512m -XX:+UseParallelGC` | `--no-daemon` | 2 workers | Disabled | Optional |
+| Standard systems | 8.5 GB to 16 GB | `-Xmx2048m -XX:MaxMetaspaceSize=512m` | `--daemon` | 4 workers | Enabled with `--parallel` | Enabled with `--build-cache` |
+| Workstations | More than 16 GB | `-Xmx4096m -XX:MaxMetaspaceSize=1024m` | `--daemon` | All logical cores | Enabled with `--parallel` | Enabled with `--build-cache` |
 
 ---
 
-## 6. Standalone Turnkey PowerShell Script
+## 6. Standalone PowerShell script
 
-For environments where cloning the repository is inconvenient, you can copy and paste this self-contained script directly into a PowerShell terminal inside any Android project root directory:
+For environments where cloning the repository is not feasible, copy and run this self-contained script inside any Android project root directory:
 
 ```powershell
 # ==============================================================================
@@ -466,33 +466,33 @@ Get-ChildItem -Path ".\app\build\outputs" -Include "*.apk","*.aab" -Recurse -Err
 
 ---
 
-## 7. Troubleshooting and Diagnostic Dictionary
+## 7. Troubleshooting and diagnostic reference
 
-### 1. "Running scripts is disabled on this system"
-- Cause: PowerShell execution policy is set to `Restricted` by default on Windows clients.
-- Remedy: Use `build.bat`, which invokes PowerShell with `-ExecutionPolicy Bypass` automatically, or adjust the execution policy for your active session:
+### 1. Running scripts is disabled on this system
+- Cause: Windows sets the default PowerShell execution policy to `Restricted`, which prevents scripts from running.
+- Remedy: Use `build.bat`, which invokes PowerShell with `-ExecutionPolicy Bypass` automatically. Alternatively, adjust the execution policy for your active session:
   ```powershell
   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
   ```
 
-### 2. `java.lang.OutOfMemoryError: Java heap space` or System Freezing
-- Cause: Unconstrained JVM processes exceed available physical memory, forcing Windows into aggressive disk paging.
+### 2. Out-of-memory errors or system freezing
+- Cause: The Gradle process exceeds available physical RAM, forcing Windows to page heavily to disk and slowing down the build.
 - Remedy: Apply the low-memory profile to cap heap usage and disable background daemons:
   ```cmd
   build.bat -BuildType Release -ForceLowMem
   ```
 
-### 3. `SDK location not found` or Invalid SDK Directory
+### 3. SDK location not found
 - Cause: Gradle cannot locate the Android SDK, or `local.properties` contains unescaped Windows backslashes.
-- Remedy: The engine automatically creates or updates `local.properties` using forward slashes (`sdk.dir=C:/Android`). If setting paths manually, always use forward slashes or escaped backslashes (`sdk.dir=C:\\Android`).
+- Remedy: The engine formats `sdk.dir` with forward slashes, such as `sdk.dir=C:/Android`, and preserves the rest of the file. If setting paths manually, format them with forward slashes or escaped backslashes, such as `sdk.dir=C:\\Android`.
 
-### 4. `Release build failed: signingConfig is not configured`
-- Cause: The target application module defines a release build type without specifying release signing credentials or fallback signing configurations.
-- Remedy: Assemble a debug variant instead, which uses the standard auto-generated Android debug certificate:
+### 4. Release signing not configured
+- Cause: The target application module defines a release build type without specifying release signing credentials.
+- Remedy: Assemble a debug variant to sign with the standard debug certificate:
   ```cmd
   build.bat -BuildType Debug
   ```
-  Alternatively, configure signing credentials in your module's `build.gradle` or `build.gradle.kts`:
+  Alternatively, configure signing credentials in your module build file:
   ```kotlin
   android {
       signingConfigs {
@@ -511,35 +511,35 @@ Get-ChildItem -Path ".\app\build\outputs" -Include "*.apk","*.aab" -Recurse -Err
   }
   ```
 
-### 5. `Failed to find target with hash string 'android-XX'`
-- Cause: The required Android platform SDK version is missing from the local SDK installation.
-- Remedy: Run the engine without `-SkipSdkInstall` and include `-AcceptLicenses`. You can also override the target SDK version directly from the command line:
+### 5. Target hash string not found
+- Cause: The required Android platform SDK package is missing from the local SDK installation.
+- Remedy: Run the engine without `-SkipSdkInstall` and include `-AcceptLicenses`. You can also override the target SDK version from the command line:
   ```cmd
   build.bat -CompileSdkOverride 34 -AcceptLicenses
   ```
 
-### 6. `Unsupported class file major version` (JDK / AGP Mismatch)
-- Cause: The active Java Development Kit version is incompatible with the Gradle or Android Gradle Plugin version configured in the project.
-- Remedy: Android APK Builder evaluates compatibility automatically. To point to an explicit JDK installation, use the `-JdkPath` parameter:
+### 6. Unsupported class file major version
+- Cause: The selected Java Development Kit version is incompatible with the Gradle or Android Gradle Plugin version configured in the project.
+- Remedy: The engine evaluates compatibility automatically. To specify a JDK installation directly, pass `-JdkPath`:
   ```cmd
   build.bat -JdkPath "C:\Program Files\Eclipse Adoptium\jdk-17.0.10.7-hotspot"
   ```
 
-### 7. Gradle Wrapper Missing or Corrupted Wrapper Archive
-- Cause: Repositories cloned without the wrapper binary (`gradle-wrapper.jar`), or a zero-byte placeholder checked into version control.
-- Remedy: The engine detects corrupted or missing wrapper archives and automatically downloads and bootstraps a fresh, compatible Gradle distribution.
+### 7. Gradle wrapper missing or corrupted
+- Cause: The project lacks `gradle/wrapper/gradle-wrapper.jar`, or the wrapper file is empty.
+- Remedy: The engine detects missing or invalid wrapper archives and downloads a matching Gradle distribution to regenerate the wrapper files automatically.
 
-### 8. Android SDK License Agreement Not Accepted
-- Cause: SDK components cannot be downloaded until official Google license terms are accepted.
-- Remedy: Pass the `-AcceptLicenses` parameter to allow the engine to automatically confirm license agreements:
+### 8. Android SDK license agreement not accepted
+- Cause: SDK components cannot be downloaded until Google license terms are accepted.
+- Remedy: Pass `-AcceptLicenses` to accept license terms non-interactively:
   ```cmd
   build.bat -AcceptLicenses
   ```
 
 ---
 
-## 8. Reporting Issues & Feedback
+## 8. Reporting issues and feedback
 
-- [Report a Bug](https://github.com/tanvirr007/android-apk-builder/issues/new?template=bug_report.yml)
-- [Request a Feature](https://github.com/tanvirr007/android-apk-builder/issues/new?template=feature_request.yml)
-- [Browse All Issues](https://github.com/tanvirr007/android-apk-builder/issues)
+- [Report a bug](https://github.com/tanvirr007/android-apk-builder/issues/new?template=bug_report.yml)
+- [Request a feature](https://github.com/tanvirr007/android-apk-builder/issues/new?template=feature_request.yml)
+- [Browse all issues](https://github.com/tanvirr007/android-apk-builder/issues)

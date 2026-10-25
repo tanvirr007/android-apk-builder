@@ -2,69 +2,75 @@
 import BaseLayout from '../layouts/Base.astro';
 import CodeBlock from '../components/CodeBlock.astro';
 
-const title = 'How to Use';
+const title = 'How to use';
 const description =
-  'The full operator manual: wizard mode, CLI invocations, release signing, memory profiles, automation flags, and what the engine changes on your machine.';
+  'Operator manual covering wizard mode, command-line flags, release signing, memory profiles, and automated builds.';
 const repo = 'C:\\path\\to\\android-apk-builder';
 const proj = 'C:\\your-android-project';
 ---
 <BaseLayout title={title} description={description} wide>
   <div class="page-head">
-    <h1>How to Use</h1>
+    <h1>How to use</h1>
     <p class="lead">
-      Two interfaces: <code>build.bat</code> for one-click and command-line use,
-      <code>setup-windows.ps1</code> for the native PowerShell engine with every knob.
-      Everything below applies on Windows 10 and 11 without Android Studio.
+      Choose between two interfaces. The <code>build.bat</code> launcher provides
+      interactive prompts and quick CLI access, while <code>setup-windows.ps1</code>
+      exposes the full PowerShell engine. Both run on Windows 10 and 11 without
+      Android Studio.
     </p>
   </div>
 
   <h2>Wizard mode</h2>
   <p>
-    Double-click <code>build.bat</code> in the builder folder. Since that folder is not
-    itself an Android project, the wizard asks for the target directory and accepts a
-    typed path or a drag-and-dropped folder. Then choose:
+    Double-click <code>build.bat</code> in the builder directory. Because that
+    directory is not an Android project, the wizard prompts for the project path.
+    Enter a folder path or drag and drop a folder into the window. Then choose an
+    action:
   </p>
   <ul>
-    <li><kbd>Enter</kbd> builds the default, a Release APK.</li>
-    <li><kbd>C</kbd> and <kbd>Enter</kbd> opens customization: Release/Debug/Both,
-    APK/AAB/Both, clean build, and low-memory mode.</li>
+    <li>Press <kbd>Enter</kbd> to build the default Release APK.</li>
+    <li>
+      Press <kbd>C</kbd> and then <kbd>Enter</kbd> to customize build variants,
+      artifact types, clean options, or memory modes.
+    </li>
   </ul>
   <p>
-    Drag-and-drop also works directly on <code>build.bat</code> from Windows Explorer,
-    building the dropped project immediately. The terminal pauses at the end so you can
-    review harvested paths and the signature verification output.
+    Dragging and dropping a project folder onto <code>build.bat</code> in File
+    Explorer builds that project immediately. The terminal stays open afterward
+    so you can inspect output paths and signature verification details.
   </p>
 
   <h2>Command-line invocations</h2>
-  <p>Run inside the Android project directory:</p>
+  <p>Run from within the Android project directory:</p>
   <CodeBlock caption="Build the current project" code={`cd ${proj}\n${repo}\\build.bat -BuildType Release`} />
-  <p>Or point at the project from anywhere:</p>
-  <CodeBlock caption="Explicit project directory" code={`${repo}\\build.bat\n-ProjectDir "${proj}" -BuildType Release`} />
+  <p>Or pass the path explicitly from any location:</p>
+  <CodeBlock caption="Explicit project directory" code={`${repo}\\build.bat -ProjectDir "${proj}" -BuildType Release`} />
 
   <h3>Build variants</h3>
-  <CodeBlock caption="Release, Debug, Both" code={`${repo}\\build.bat -BuildType Debug\n${repo}\\build.bat -BuildType Release\n${repo}\\build.bat -BuildType Both`} />
+  <CodeBlock caption="Release, debug, or both" code={`${repo}\\build.bat -BuildType Debug\n${repo}\\build.bat -BuildType Release\n${repo}\\build.bat -BuildType Both`} />
 
   <h3>Artifact types</h3>
   <p>
-    Produce installable APKs, Play Store bundles (.aab), or both. AAB uploads are what
-    Google Play expects for publishing; APKs install locally.
+    Generate installable APK files, Google Play AAB bundles, or both. Google
+    Play requires AAB bundles for store releases, while APKs install directly on
+    test devices.
   </p>
-  <CodeBlock caption="APK, AAB, Both" code={`${repo}\\build.bat -ArtifactType AAB\n${repo}\\build.bat -ArtifactType Both`} />
+  <CodeBlock caption="APK, AAB, or both" code={`${repo}\\build.bat -ArtifactType AAB\n${repo}\\build.bat -ArtifactType Both`} />
 
   <h3>Multi-module apps</h3>
-  <p>Repositories with several app modules take a <code>-Module</code>:</p>
+  <p>For projects with multiple app modules, pass <code>-Module</code> to target a specific module:</p>
   <CodeBlock caption="Target one module" code={`${repo}\\build.bat -Module ":app" -BuildType Release`} />
 
   <h2>Release signing</h2>
   <p>
-    With no keystore supplied, the engine generates a dedicated release keystore,
-    signs the APK with v1, v2, and v3 schemes, and stores the keystore for reuse so
-    every build keeps the same signature. Provide your own instead:
+    When no keystore is provided, the engine creates a dedicated release
+    keystore, signs the APK with v1, v2, and v3 schemes, and preserves the key
+    for subsequent builds. To sign with an existing keystore, pass your
+    credentials:
   </p>
   <CodeBlock caption="Custom keystore" code={`${repo}\\build.bat -KeystorePath "C:\\keys\\app.jks"\n-StorePassword "secret123" -KeyAlias "myalias"`} />
   <p>
-    Externally managed signing (for example when Gradle config handles release signing)
-    uses <code>-SkipSigning</code>. Certificates can be fully described:
+    To let Gradle handle release signing, pass <code>-SkipSigning</code>. You can
+    also specify certificate details using
     <code>-KeyDName "CN=Dev,O=Org,C=US"</code>.
   </p>
 
@@ -72,66 +78,75 @@ const proj = 'C:\\your-android-project';
   <dl>
     <dt><code>-ForceLowMem</code></dt>
     <dd>
-      Caps the JVM near 1.5 GB, single worker, no daemon. For 4 GB and tight 8 GB
-      machines, where an unconstrained Gradle can freeze the pagefile.
+      Caps JVM heap memory at 1.5 GB, limits execution to a single worker, and
+      disables the Gradle daemon. Recommended for systems with 4 GB to 8 GB of
+      RAM to prevent excessive disk paging.
     </dd>
     <dt><code>-HighMem</code></dt>
-    <dd>4 GB heap, parallel workers, build cache. For multi-core workstations.</dd>
+    <dd>
+      Allocates a 4 GB heap, enables parallel workers, and turns on the build
+      cache for multi-core workstations.
+    </dd>
     <dt>Default</dt>
     <dd>
-      The engine reads physical RAM via WMI and picks a profile automatically.
-      Overhead stays under 8.5 GB total: below that, conservative settings apply.
+      The engine detects physical RAM through WMI and selects a profile
+      automatically. When total system memory is below 8.5 GB, conservative
+      limits apply.
     </dd>
   </dl>
   <CodeBlock caption="Force a profile" code={`${repo}\\build.bat -ForceLowMem\n${repo}\\build.bat -HighMem`} />
 
   <h2>Automation and CI switches</h2>
   <p>
-    For pipelines and unattended runs, combine:
-    <code>-AcceptLicenses</code> (non-interactive SDK licenses),
-    <code>-CleanFirst</code> (Gradle clean before assembling),
-    <code>-OutputDir "C:\builds"</code>, <code>-Offline</code>,
-    <code>-DryRun</code> (inspect and plan without compiling), and
-    <code>-VerboseLog</code>.
+    For automated pipelines and continuous integration, combine switches such as
+    <code>-AcceptLicenses</code> to accept SDK terms non-interactively,
+    <code>-CleanFirst</code> to run a clean build,
+    <code>-OutputDir "C:\builds"</code> to set a destination folder,
+    <code>-Offline</code> to use cached dependencies,
+    <code>-DryRun</code> to inspect project requirements without compiling, and
+    <code>-VerboseLog</code> for diagnostics.
   </p>
   <CodeBlock caption="Headless example" code={`${repo}\\build.bat -ProjectDir "${proj}"\n-AcceptLicenses -CleanFirst -OutputDir "C:\\builds"`} />
 
   <h2>What the engine changes on your machine</h2>
   <ul>
     <li>
-      Environment variables (<code>JAVA_HOME</code>, <code>ANDROID_HOME</code>,
-      <code>GRADLE_OPTS</code>) are scoped to the running session. Nothing is written to
-      the registry or system-wide environment.
+      Environment variables such as <code>JAVA_HOME</code>,
+      <code>ANDROID_HOME</code>, and <code>GRADLE_OPTS</code> are scoped
+      strictly to the active terminal session. The engine writes nothing to the
+      Windows registry or persistent system environment.
     </li>
     <li>
-      <code>local.properties</code> gets its <code>sdk.dir</code> line updated with
-      forward slashes; every other line, including comments, is preserved, and a
-      <code>local.properties.bak</code> backup is created first.
+      The engine updates <code>sdk.dir</code> in <code>local.properties</code>
+      using forward slashes. It creates a <code>local.properties.bak</code> backup
+      first and preserves all other existing lines and comments.
     </li>
     <li>
-      Artifacts are copied out of Gradle's build folders, never moved, so incremental
-      rebuild caches stay valid.
+      The engine copies artifacts from Gradle build folders rather than moving
+      them, preserving incremental build caches.
     </li>
   </ul>
 
   <h2>Outputs and verification</h2>
   <p>
-    Harvested files land in the output directory (<code>dist</code> by default) and are
-    mirrored to <code>android-apk-builder\dist\&lt;project&gt;</code>. For every artifact the
-    engine prints a SHA-256 hash and runs <code>apksigner verify</code>, listing active
-    signature schemes. The signing manifest (<code>signing-credentials.txt</code>)
-    contains the passwords, alias, certificate fingerprints, a Base64 keystore for CI
-    secrets, and a ready GitHub Actions step.
+    Harvested files are saved to the output directory, which defaults to
+    <code>dist</code>, and copied to
+    <code>android-apk-builder\dist\&lt;project&gt;</code>. For every artifact,
+    the engine computes a SHA-256 hash and runs <code>apksigner verify</code> to
+    report active signature schemes. The signing manifest file,
+    <code>signing-credentials.txt</code>, records passwords, key aliases,
+    certificate fingerprints, a Base64-encoded keystore for CI secrets, and a
+    GitHub Actions workflow step.
   </p>
   <p>
-    Keep generated keystores with the project. Installing an update APK signed with a
-    different key fails on-device with
-    <code>INSTALL_FAILED_UPDATE_INCOMPATIBLE</code>.
+    Retain generated keystores alongside the project. Installing an updated APK
+    signed with a different key triggers
+    <code>INSTALL_FAILED_UPDATE_INCOMPATIBLE</code> on Android devices.
   </p>
 
   <h2>Reporting issues</h2>
   <p>
-    If you face any issues, encounter unexpected build failures, or have questions while using Android APK Builder, please
-    <a href="https://github.com/tanvirr007/android-apk-builder/issues" target="_blank" rel="noopener noreferrer">report it on GitHub</a>.
+    If you encounter build failures or bugs,
+    <a href="https://github.com/tanvirr007/android-apk-builder/issues" target="_blank" rel="noopener noreferrer">open an issue on GitHub</a>.
   </p>
 </BaseLayout>

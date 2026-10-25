@@ -1,85 +1,53 @@
-# Website Design Style
+# Design style
 
-The standing design contract for this site. The machine-readable subset lives in
-`docs/DESIGN.md` (deliberately kept with the docs, so the Impeccable detector's
-token-drift gate is off; generic slop and quality checks still run). The
-reasoning and rules live here. Prompt-style usage: when asking any model or
-agent to touch the site, paste or link this file plus `docs/impeccable.md`.
+The standing design contract for this site. The machine-readable subset lives in `docs/DESIGN.md`, and the design rules live here. When prompting an agent to modify the site, reference this file alongside `docs/impeccable.md` for visual standards and `docs/unslop.md` for editorial guidelines.
 
-## Who this site is for
+## Target audience
 
-A Windows developer who cloned this repo and wants to know, in five minutes:
-what is this tool, how do I run it, which flags exist, and what do I do when a
-build fails. Docs-utilitarian. Nothing decorative earns its place.
+The site serves Windows developers who need to understand what the tool does, how to run it, which flags are available, and how to resolve build failures. Every element must serve a functional documentation purpose.
 
-## Type
+## Typography
 
-- Source Sans 3 for everything human-readable; JetBrains Mono only for code,
-  commands, file paths, and parameter names.
-- Self-hosted via @fontsource, subsets: latin only, weights 400/600/700 sans,
-  400 mono. `font-display: swap`.
-- Body 16px minimum everywhere, line-height 1.55 for paragraphs.
-- Prose measure 44rem (~66ch). Headings `text-wrap: balance`.
+- Use Source Sans 3 for human-readable text. Reserve JetBrains Mono for code blocks, inline commands, file paths, and parameter names.
+- Host fonts locally through `@fontsource` using latin subsets, including weights 400, 600, and 700 for sans, and weight 400 for mono. Specify `font-display: swap`.
+- Body text uses a 16px minimum floor with a line-height of 1.55 for paragraphs.
+- Prose width is capped at 44rem, approximately 66 characters per line. Headings use `text-wrap: balance`.
 
 ## Color
 
-- Light is the default theme. One green accent family, one neutrals ramp.
-  Accent appears as: link text, active nav icon fill, primary button background.
-  That is the complete list of allowed uses.
-- Dark theme: same structure, brighter accent, no glow, no neon border, no
-  radial halo. If a dark component needs emphasis, it gets a surface color
-  change or a border color change, never a shadow-glow.
-- Error color exists strictly for error text; it is never decorative.
+- Light theme is the default. The palette pairs a green accent family with neutral greys. The accent color is used only for link text, active navigation icons, and primary button backgrounds.
+- Dark theme retains the same palette structure with a brighter accent. Avoid glow effects, neon borders, or radial halos. To emphasize a dark component, adjust surface or border colors rather than adding box shadows.
+- The error color is reserved strictly for error messages and is never used decoratively.
 
 ## Layout
 
-- Mobile-first, fluid `clamp()` type, single max-widths via CSS custom
-  properties. Main prose column max 44rem; wide pages (reference tables) 56rem.
-- Spacing scale 4/8/12/16/24/32/48/64/96. Related items sit closer than
-  unrelated ones; section gaps step up at 48/64. Deliberately not uniform 16px
-  everywhere (anti "monotonous spacing").
-- Radii: 0 / 2 / 6 / 10. Nothing pill-shaped except the floating nav itself,
-  which is the only intentional pill on the site.
-- Cards: none by default. Lists, tables, and headings do the work. Where an
-  inset surface is needed (code blocks), background-only, no border + shadow
-  pair.
+- Design mobile-first using fluid `clamp()` sizing and layout widths set via CSS custom properties. Main prose columns use a maximum width of 44rem, while reference tables extend up to 56rem.
+- The spacing scale comprises 4px, 8px, 12px, 16px, 24px, 32px, 48px, 64px, and 96px. Related elements sit close together, and major section gaps expand at 48px and 64px.
+- Corner radii are restricted to 0px, 2px, 6px, and 10px. The floating navigation bar is the only pill-shaped element on the site.
+- Avoid cards by default. Structured lists, tables, and section headings organize information. Where inset surfaces are required for code blocks, use solid backgrounds without combining borders and shadows.
 
 ## Navigation
 
-- Floating pill, bottom-center, icons only, 40px min touch target, tooltip
-  text via `aria-label` + `title`. Overflow-x scroll internally on screens
-  under 360px; page itself never scrolls sideways.
-- No subtitles under icons. Active page: solid accent icon + `aria-current`.
-- Keyboard reachable, focus-visible ring in accent, skip-to-content link first
-  in DOM.
+- The navigation bar is a bottom-centered floating pill displaying icons with a 40px minimum touch target. Tooltips use `aria-label` and `title` attributes. On screens narrower than 360px, the bar scrolls horizontally without causing page-level overflow.
+- Icons do not include subtitles. The active page displays a solid accent icon and an `aria-current` attribute.
+- Navigation supports full keyboard access, displays an accent focus ring, and provides a skip-to-content link as the first DOM element.
 
 ## Theme
 
-- Light default. Toggle opens the theme picker sheet (Light / Dark / Follow
-  system). Choice persists in `localStorage["theme"]`.
-- `public/theme-core.js` runs synchronously in `<head>` (plain file, strict
-  CSP-friendly, no inline script needed) and sets `data-theme` before first
-  paint: no flash, no hydration dependency.
+- The light theme is active by default. The toggle button opens a sheet providing light, dark, and system options. The selected mode persists in local storage under the `theme` key.
+- `public/theme-core.js` runs synchronously in the HTML head without inline scripts and applies `data-theme` before first paint, preventing layout shifts or theme flashing.
 
 ## Copy rules
 
-- Sentence case headings. US English. No em-dashes; periods and commas do the
-  separating. No marketing superlatives. Commands are verbatim from the repo's
-  README so copy-paste always works.
-- Buttons say the verb: "Copy", "Copied", "Open in sheet". No decorative
-  microcopy, no repeated labels inside one block.
+- Adhere to the editorial rules in `docs/unslop.md`. Use sentence case for all headings and write in US English. Avoid em dashes, prose parentheses, and marketing superlatives. Commands must match the repository README verbatim so copy-paste operations succeed reliably.
+- Buttons use concise imperative verbs such as Copy, Copied, or Open. Avoid repetitive labels and decorative microcopy.
 
 ## Motion
 
-- Default: 160ms ease for color/border/opacity only. Sheets: 220ms slide with
-  0ms settle, no bounce, no elastic. `prefers-reduced-motion` removes all
-  transitions/animations.
-- No marquee, no pulse, no blinking cursor, no entrance animations that hide
-  content on failure (content is visible by default).
+- Default transitions use 160ms ease for color, border, and opacity changes. Modal sheets use a 220ms slide transition without bounce or overshoot. The `prefers-reduced-motion` media query disables transitions and animations entirely.
+- Avoid marquees, pulse effects, blinking cursors, and entrance animations that could obscure content if scripts fail to load.
 
 ## Performance budget
 
-- Total JS on any interaction-heavy page under ~6KB gzipped (theme core +
-  one bundled site script). Zero framework runtime.
-- Each page: one external stylesheet, font files limited to the exact
-  latin subsets and weights used. Lighthouse mobile 95+ target on all pages.
+- Total JavaScript across the site remains under 6 KB gzipped, consisting only of the theme script and the site utility script. The site uses zero framework runtime code.
+- Each page loads a single external stylesheet and includes only the required latin font subsets. Target a mobile Lighthouse score of 95 or higher across all pages.

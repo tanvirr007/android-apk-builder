@@ -5,54 +5,54 @@ import { icon } from '../components/icons';
 
 const title = 'Troubleshooting';
 const description =
-  'Fixes for the eight most common Android APK Builder failures: execution policy, Java heap OOM, SDK location, signing config, missing platform, JDK and AGP mismatch, lost Gradle wrapper, and license prompts.';
+  'Solutions for common Android APK Builder errors, covering PowerShell execution policy, memory limits, SDK configuration, release signing, JDK versions, and Gradle wrappers.';
 
 const issues: { error: string; cause: string; remedy: string; code?: string; extra?: string }[] = [
   {
     error: 'Running scripts is disabled on this system',
-    cause: 'PowerShell ships with its execution policy set to Restricted on Windows clients, so .ps1 files refuse to run.',
-    remedy: 'build.bat already invokes PowerShell with -ExecutionPolicy Bypass, so using it instead of running setup-windows.ps1 directly makes the problem disappear. For direct PowerShell use, relax the policy for that session only:',
+    cause: 'Windows sets the default PowerShell execution policy to Restricted, which prevents scripts from running.',
+    remedy: 'Running build.bat bypasses this restriction automatically. If you run setup-windows.ps1 directly, set the execution policy for your active session:',
     code: 'Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force',
   },
   {
     error: 'java.lang.OutOfMemoryError: Java heap space',
-    cause: 'Unconstrained JVM processes exceed the physical RAM available, and Windows starts aggressively paging to disk. The page can seem to freeze while Gradle works.',
-    remedy: 'Apply the low-memory profile, which caps the heap and disables background daemons:',
+    cause: 'The Gradle process exceeds available physical RAM, forcing Windows to page heavily to disk and slowing down the build.',
+    remedy: 'Apply the low-memory profile to cap heap usage and disable background daemons:',
     code: 'build.bat -BuildType Release -ForceLowMem',
   },
   {
     error: 'SDK location not found',
-    cause: 'Gradle cannot locate the Android SDK, or local.properties contains unescaped Windows backslashes, which .properties syntax treats as escape characters.',
-    remedy: 'The engine writes sdk.dir with forward slashes (sdk.dir=C:/Android) and leaves the rest of the file intact. If you edit local.properties by hand, always use forward slashes or double backslashes (sdk.dir=C:\\\\Android).',
+    cause: 'Gradle cannot locate the Android SDK, or local.properties contains unescaped Windows backslashes, which properties syntax treats as escape characters.',
+    remedy: 'The engine formats sdk.dir with forward slashes, such as sdk.dir=C:/Android, and preserves the rest of the file. If you edit local.properties manually, format paths with forward slashes or escaped backslashes, such as sdk.dir=C:\\\\Android.',
   },
   {
     error: 'Release build failed: signingConfig is not configured',
     cause: 'The project defines a release build type without signing credentials, and no fallback is present.',
-    remedy: 'Either build the debug variant, which signs with the auto-generated debug certificate:',
+    remedy: 'Build the debug variant to sign with the default debug certificate:',
     code: 'build.bat -BuildType Debug',
-    extra: 'Or configure release signing in the module build file; the engine also injects a compatible config automatically when the keystore is known:',
+    extra: 'Alternatively, configure release signing in the module build file. The engine injects signing settings automatically when a keystore is specified:',
   },
   {
     error: "Failed to find target with hash string 'android-XX'",
-    cause: 'The Android platform package the project targets is not installed in the local SDK.',
-    remedy: 'Let the engine install missing platforms (do not pass -SkipSdkInstall) and accept the licenses. To pin a platform version explicitly:',
+    cause: 'The required Android SDK platform package is not installed locally.',
+    remedy: 'Allow the engine to install missing platforms without passing -SkipSdkInstall, and accept the SDK licenses. To pin a specific platform version:',
     code: 'build.bat -CompileSdkOverride 34 -AcceptLicenses',
   },
   {
     error: 'Unsupported class file major version',
-    cause: 'The active JDK version does not match what the project AGP and Gradle combination requires, so javac output is rejected by the toolchain or vice versa.',
-    remedy: 'The engine evaluates the compatibility matrix automatically before building. If several JDKs exist on the host and the wrong one is matched, point at the right installation directly:',
+    cause: 'The selected JDK version is incompatible with the project Android Gradle Plugin or Gradle version.',
+    remedy: 'The engine checks compatibility requirements before compiling. If the host has multiple JDK installations and selects an unintended one, pass the path directly:',
     code: 'build.bat -JdkPath "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.10.7-hotspot"',
   },
   {
     error: 'Gradle wrapper missing or corrupted',
-    cause: 'The repository was cloned without gradle/wrapper/gradle-wrapper.jar, or a zero-byte placeholder got committed.',
-    remedy: 'The engine detects missing or invalid wrapper archives and bootstraps a fresh Gradle distribution that matches the project AGP requirements, then regenerates a clean wrapper environment. No manual action is needed.',
+    cause: 'The project is missing gradle/wrapper/gradle-wrapper.jar, or the wrapper file is empty.',
+    remedy: 'The engine detects missing or invalid wrapper archives, downloads a matching Gradle distribution based on the AGP version, and regenerates the wrapper files automatically.',
   },
   {
     error: 'Android SDK license agreement not accepted',
-    cause: 'SDK components cannot download until the official Google license terms are accepted, and fresh CI machines never have them pre-accepted.',
-    remedy: 'Pass the acceptance switch and the engine confirms the licenses non-interactively:',
+    cause: 'Android SDK components cannot download until the Google license terms are accepted.',
+    remedy: 'Pass the acceptance switch to accept all licenses non-interactively:',
     code: 'build.bat -AcceptLicenses',
   },
 ];
@@ -61,7 +61,7 @@ const issues: { error: string; cause: string; remedy: string; code?: string; ext
   <div class="page-head">
     <h1>Troubleshooting</h1>
     <p class="lead">
-      The eight most common failures with cause and remedy. Match the error text
+      Solutions for the eight most common build failures. Match the error text
       from your build log, then apply the fix.
     </p>
   </div>
@@ -89,8 +89,8 @@ const issues: { error: string; cause: string; remedy: string; code?: string; ext
   </div>
 
   <p>
-    Nothing matched? Run the same build again with <code>-VerboseLog</code>, then
-    <a href="https://github.com/tanvirr007/android-apk-builder/issues/new?template=bug_report.yml">open a bug report</a>
-    with the log attached.
+    If your error is not listed, run the build with <code>-VerboseLog</code> and
+    <a href="https://github.com/tanvirr007/android-apk-builder/issues/new?template=bug_report.yml" target="_blank" rel="noopener noreferrer">open a bug report on GitHub</a>
+    with the output attached.
   </p>
 </BaseLayout>
