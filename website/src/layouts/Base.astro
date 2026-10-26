@@ -53,13 +53,13 @@ const ogImage = new URL('/og.png', Astro.site);
   <body>
     <a class="skip" href="#main">Skip to content</a>
 
-    <Header wide={wide} transition:persist="site-header" />
+    <Header wide={wide} />
 
     <main id="main" class="layout" data-wide={wide || undefined}>
       <slot />
     </main>
 
-    <FloatingNav transition:persist="floating-nav" />
+    <FloatingNav />
 
     <script is:inline src="/site.js"></script>
   </body>

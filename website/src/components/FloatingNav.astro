@@ -14,7 +14,7 @@ const pageItems = [
   { href: '/troubleshooting', icon: 'wrench' as const, label: 'Troubleshooting' },
 ];
 ---
-<nav class="floatnav" aria-label="Site navigation" transition:persist="floatnav">
+<nav class="floatnav" aria-label="Site navigation" transition:persist="site-floating-nav" transition:animate="none">
   <span class="floatnav-pill" aria-hidden="true" data-nav-pill></span>
   {pageItems.map((item) => (
     <a

@@ -262,7 +262,7 @@ code {
 .site-header {
   position: sticky;
   top: 0;
-  z-index: 25;
+  z-index: 50;
   border-block-end: 1px solid var(--line);
   background: var(--bg);
   transition: background-color var(--t-fast) ease, border-color var(--t-fast) ease;
@@ -393,6 +393,7 @@ code {
   max-width: var(--code-measure);
   margin-block: var(--sp-4) var(--sp-6);
   width: 100%;
+  min-width: 0;
 }
 
 .cmd-grid {
@@ -404,6 +405,7 @@ code {
 
 .cmd-grid .cmd {
   margin-block: 0;
+  min-width: 0;
 }
 
 @media (min-width: 768px) {
@@ -471,8 +473,11 @@ pre code {
 .floatnav {
   position: fixed;
   inset-block-end: calc(env(safe-area-inset-bottom, 0px) + var(--sp-4));
-  inset-inline-start: 50%;
-  transform: translateX(-50%);
+  inset-inline: 0;
+  margin-inline: auto;
+  width: max-content;
+  max-width: calc(100vw - 2 * var(--sp-4));
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -480,10 +485,9 @@ pre code {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 999px;
-  max-width: calc(100vw - 2 * var(--sp-4));
   overflow-x: auto;
   scrollbar-width: none;
-  z-index: 20;
+  z-index: 40;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 .floatnav::-webkit-scrollbar { display: none; }
@@ -719,14 +723,6 @@ pre code {
 
 #main {
   view-transition-name: main-content;
-}
-
-.site-header {
-  view-transition-name: site-header;
-}
-
-.floatnav {
-  view-transition-name: floatnav;
 }
 
 /* Default / fallback cross-fade */
