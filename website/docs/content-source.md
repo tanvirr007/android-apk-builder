@@ -19,3 +19,4 @@ Every page copy traces to a README section so the site reflects the engine behav
 ## Sync log
 
 - 2026-10-25: Initial mapping verified against repository README.
+- 2026-10-26: Synchronized project requirements and unsupported target types note on Home page with repository README Overview.

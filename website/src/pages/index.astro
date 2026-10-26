@@ -33,6 +33,16 @@ const features = [
     to host hardware.
   </p>
 
+  <p>
+    Projects must be standard Android applications configured with Gradle. Each
+    project requires a <code>build.gradle</code> or <code>build.gradle.kts</code>
+    file and the <code>com.android.application</code> plugin. Source code can be
+    written in Java, Kotlin, or mixed languages. The engine does not compile AOSP
+    platform packages configured with <code>Android.bp</code> or
+    <code>Android.mk</code>, standalone non-Android Java applications, or legacy
+    Ant projects.
+  </p>
+
   <h2>What the engine does automatically</h2>
   <ul class="feature-list">
     {features.map((feat) => (

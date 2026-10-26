@@ -13,6 +13,13 @@ Android APK Builder is a standalone build automation engine that compiles Kotlin
 
 Android Studio consumes 4 GB to 8 GB of RAM at idle. Android APK Builder runs directly in PowerShell or Command Prompt, configuring memory to match host hardware and compiling projects without an IDE.
 
+### Project requirements
+
+The engine compiles standard Android applications configured with Gradle:
+
+- **Supported projects.** Android applications written in Java, Kotlin, or mixed source trees with `build.gradle` or `build.gradle.kts` files and the `com.android.application` plugin.
+- **Unsupported targets.** AOSP or custom ROM platform packages configured with `Android.bp` or `Android.mk`, standalone non-Android Java applications, and legacy Ant or Eclipse ADT projects.
+
 ### Self-adapting architecture
 
 The engine analyzes host hardware and project configuration files before starting a build:

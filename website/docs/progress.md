@@ -32,9 +32,11 @@ Working log. Update every milestone and preserve history.
 | 2026-10-25 | unslop.md editorial rules added to docs directory | Provides standalone anti-AI writing standards for documentation and contributors |
 | 2026-10-25 | Conventional desktop navigation in header with mobile floating dock | Optimizes desktop ergonomics and layout space while preserving mobile touch dock |
 | 2026-10-25 | Removal of cards and tick marks from capability list | Adheres to design-style.md rule to avoid cards and presents a clean 2-column structured list |
+| 2026-10-26 | Clarified Gradle project requirements and unsupported AOSP and non-Gradle targets | Informs users that standard Gradle and AGP are required and prevents attempts to build AOSP or plain Java apps |
 
 ## Sync log
 
 | Date | Repository change | Site update |
 |---|---|---|
 | 2026-10-25 | Content extraction from repository README | Initial content release |
+| 2026-10-26 | Added project requirements section to README | Updated Home page with matching Gradle and AOSP scope note |
