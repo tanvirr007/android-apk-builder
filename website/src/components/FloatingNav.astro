@@ -13,9 +13,12 @@ const pageItems = [
   { href: '/how-to-use', icon: 'book' as const, label: 'How to use' },
   { href: '/troubleshooting', icon: 'wrench' as const, label: 'Troubleshooting' },
 ];
+
+const activeIndex = pageItems.findIndex((item) => isActive(item.href));
+const initialLeft = activeIndex >= 0 ? activeIndex * 46 : 0;
 ---
-<nav class="floatnav" aria-label="Site navigation" transition:persist="site-floating-nav" transition:animate="none">
-  <span class="floatnav-pill" aria-hidden="true" data-nav-pill></span>
+<nav class="floatnav" aria-label="Site navigation" transition:persist="site-floating-nav" transition:animate="none" data-ready>
+  <span class="floatnav-pill" aria-hidden="true" data-nav-pill style={`transform: translate3d(${initialLeft}px, 0, 0);`}></span>
   {pageItems.map((item) => (
     <a
       href={item.href}
