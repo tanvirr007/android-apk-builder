@@ -3,7 +3,7 @@ import { defineConfig } from 'astro/config';
 
 // Canonical URL for the production site.
 export default defineConfig({
-  site: 'https://pkg.tanvir.info',
+  site: 'https://build.tanvir.info',
   output: 'static',
   compressHTML: true,
   prefetch: {
